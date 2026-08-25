@@ -1,10 +1,103 @@
-/**index.wxss**/
 page {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #fff8ea;
+  color: #4a3828;
 }
+
 .scrollarea {
   flex: 1;
-  overflow-y: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 197, 92, 0.24) 0, rgba(255, 197, 92, 0.24) 90rpx, transparent 92rpx),
+    radial-gradient(circle at 88% 82%, rgba(133, 196, 157, 0.20) 0, rgba(133, 196, 157, 0.20) 130rpx, transparent 132rpx),
+    linear-gradient(160deg, #fff8ea 0%, #f9edda 100%);
 }
+
+.page-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 54rpx 38rpx 70rpx;
+  box-sizing: border-box;
+}
+
+.decor {
+  position: absolute;
+  color: rgba(150, 111, 73, 0.16);
+  font-size: 70rpx;
+  transform: rotate(-24deg);
+}
+
+.decor-left { top: 40rpx; left: 24rpx; }
+.decor-right { right: 20rpx; bottom: 35rpx; transform: rotate(22deg); }
+
+.pet-card {
+  position: relative;
+  width: 100%;
+  padding: 42rpx 34rpx 38rpx;
+  border: 2rpx solid rgba(151, 112, 75, 0.12);
+  border-radius: 38rpx;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 22rpx 55rpx rgba(106, 77, 48, 0.16);
+  box-sizing: border-box;
+}
+
+.greeting-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+
+.pet-emoji { margin-right: 14rpx; font-size: 46rpx; }
+.title { color: #4a3828; font-size: 44rpx; font-weight: 700; letter-spacing: 1rpx; }
+
+.image-frame {
+  overflow: hidden;
+  width: 100%;
+  height: 600rpx;
+  border: 10rpx solid #ffffff;
+  border-radius: 28rpx;
+  background: #eee4d5;
+  box-shadow: 0 12rpx 30rpx rgba(87, 61, 37, 0.14);
+  box-sizing: border-box;
+}
+
+.pet-image { display: block; width: 100%; height: 100%; }
+
+.indicator-list {
+  display: flex;
+  justify-content: center;
+  margin: 26rpx 0 28rpx;
+}
+
+.indicator {
+  width: 13rpx;
+  height: 13rpx;
+  margin: 0 8rpx;
+  border-radius: 50%;
+  background: #dccbb8;
+  transition: all 0.25s ease;
+}
+
+.indicator-active { width: 36rpx; border-radius: 8rpx; background: #d48852; }
+
+.change-button {
+  width: 72%;
+  border: none;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #e49a63, #cb704b);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  box-shadow: 0 10rpx 24rpx rgba(198, 105, 69, 0.28);
+}
+
+.change-button::after { border: none; }
+.button-hover { opacity: 0.82; transform: scale(0.98); }
+.hint { display: block; margin-top: 18rpx; color: #a18b74; font-size: 21rpx; text-align: center; letter-spacing: 1rpx; }

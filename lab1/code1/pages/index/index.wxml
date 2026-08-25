@@ -1,7 +1,31 @@
-<!--index.wxml-->
-<navigation-bar title="Weixin" back="{{false}}" color="black" background="#FFF"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y type="list">
-  <view class="container">
-    Weixin
+<!-- pages/index/index.wxml -->
+<navigation-bar title="🐱or🐕" back="{{false}}" color="#4a3828" background="#fff8ea"></navigation-bar>
+
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-container">
+    <view class="decor decor-left">🐾</view>
+    <view class="decor decor-right">🐾</view>
+
+    <view class="pet-card">
+      <view class="greeting-row">
+        <text class="pet-emoji">{{currentPet.emoji}}</text>
+        <text class="title">{{currentPet.wording}}</text>
+      </view>
+
+      <view class="image-frame">
+        <image class="pet-image" mode="aspectFill" src="{{currentPet.image}}"></image>
+      </view>
+
+      <view class="indicator-list">
+        <view
+          wx:for="{{pets}}"
+          wx:key="wording"
+          class="indicator {{index === currentIndex ? 'indicator-active' : ''}}"
+        ></view>
+      </view>
+
+      <button class="change-button" bindtap="changePet" hover-class="button-hover">not me</button>
+      <text class="hint">Tap to meet another friend</text>
+    </view>
   </view>
 </scroll-view>

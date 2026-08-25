@@ -44,7 +44,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 
 `navigation-bar` 的 `title` 属性“个人名片”，`back="{{false}}"` 表示首页不需要返回按钮；`scroll-y` 使内容在不同尺寸的手机上都可以纵向滚动，`show-scrollbar="{{false}}"` 隐藏滚动条，使页面更整洁。
 
-![image-20260825113715428](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825113715428.png)
+![image-20260825113715428](./image-20260825113715428.png)
 
 #### 2.2 标题区域设计
 
@@ -70,7 +70,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 
 `linear-gradient` 使页面从顶部深蓝逐渐过渡到下方浅蓝，既突出白色标题，又与海洋主题相呼应。
 
-![image-20260825114013481](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825114013481.png)
+![image-20260825114013481](./image-20260825114013481.png)
 
 #### 2.3 名片头图展示
 
@@ -94,7 +94,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 }
 ```
 
-![image-20260825114326059](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825114326059.png)
+![image-20260825114326059](./image-20260825114326059.png)
 
 #### 2.4 个人身份和介绍区域
 
@@ -132,7 +132,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 }
 ```
 
-![image-20260825114828327](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825114828327.png)
+![image-20260825114828327](./image-20260825114828327.png)
 
 #### 2.5 兴趣标签和个人寄语
 
@@ -160,7 +160,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 
 该区域使用浅蓝渐变背景和装饰引号，与主要内容形成区别，同时使名片内容更加完整。
 
-![image-20260825114939244](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825114939244.png)
+![image-20260825114939244](./image-20260825114939244.png)
 
 #### 2.6 卡片效果与移动端适配
 
@@ -177,7 +177,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 
 `overflow: hidden` 可以保证顶部图片不会超出卡片圆角；`box-shadow` 增强卡片与背景之间的层次。页面尺寸主要使用微信小程序的 `rpx` 单位。小程序会根据设备屏幕宽度自动换算 `rpx`，因此标题、间距和卡片在不同屏幕上能保持相对一致的比例。
 
-![image-20260825115347639](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825115347639.png)
+![image-20260825115347639](./image-20260825115347639.png)
 
 ```wxss
 .page-shell { padding: 48rpx 30rpx 52rpx; box-sizing: border-box; }
@@ -187,7 +187,7 @@ AI 生成的图片采用 16:9 横向构图。左侧是个人形象，右侧依�
 
 
 
-![image-20260825113154172](C:\Users\savage\AppData\Roaming\Typora\typora-user-images\image-20260825113154172.png)
+![image-20260825113154172](./image-20260825113154172.png)
 
 
 
