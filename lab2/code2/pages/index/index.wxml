@@ -1,6 +1,8 @@
 <!-- pages/index/index.wxml -->
 <navigation-bar title="个人名片" back="{{false}}" color="#ffffff" background="#075985"></navigation-bar>
+
 <scroll-view class="page-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+
   <view class="page-shell">
     <view class="hero-heading">
       <text class="eyebrow">MY PROFILE</text>
@@ -16,12 +18,12 @@
             <text class="identity">计算机科学与技术专业 · 本科生</text>
           </view>
           <text class="school-badge">OUC</text>
-        </view>
+        </view> 
         <view class="divider"></view>
         <view class="intro-section">
           <text class="section-title">个人介绍</text>
           <text class="intro-text">我来自中国海洋大学信息科学与工程学部，主修计算机科学与技术。我热爱编程与人工智能，喜欢把灵感变成简洁、实用的作品，也期待用技术探索更广阔的海洋世界。</text>
-        </view>
+        </view> 
         <view class="intro-section">
           <text class="section-title">兴趣方向</text>
           <view class="tag-list">
@@ -37,4 +39,5 @@
     </view>
     <text class="footer">OCEAN UNIVERSITY OF CHINA</text>
   </view>
-</scroll-view>
+
+</scroll-view> 
