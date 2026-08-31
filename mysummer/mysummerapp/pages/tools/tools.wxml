@@ -1,0 +1,17 @@
+<navigation-bar title="工具" back="{{false}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell">
+    <view class="tool-hero"><text class="tool-kicker">BUDGET PLANNER</text><text class="tool-title">先算清楚，再决定走多远</text><text class="tool-copy">P0 预算计算器 · 所有价格均为原型参考估算</text></view>
+    <view class="section"><view class="section-title">1. 路线方案</view><view class="option-grid"><view class="option {{index === planIndex ? 'active' : ''}}" wx:for="{{budgetPlans}}" wx:key="id" data-index="{{index}}" bindtap="selectPlan"><text class="option-name">{{item.name}}</text><text class="option-note">{{item.note}}</text></view></view></view>
+    <view class="section"><view class="section-title">2. 住宿标准</view><view class="chip-row"><view class="choice-chip {{index === lodgingIndex ? 'active' : ''}}" wx:for="{{lodgingOptions}}" wx:key="id" data-index="{{index}}" bindtap="selectLodging">{{item.name}} · ¥{{item.pricePerNight}}/晚</view></view></view>
+    <view class="section"><view class="section-title">3. 每日饮食</view><view class="chip-row"><view class="choice-chip {{index === foodIndex ? 'active' : ''}}" wx:for="{{foodOptions}}" wx:key="*this" data-index="{{index}}" bindtap="selectFood">¥{{item}}/天</view></view></view>
+    <view wx:if="{{result}}" class="section result-card card">
+      <text class="result-label">基础预计预算</text><text class="result-total">¥{{result.baseTotal}}</text><text class="result-route">{{result.plan.name}} · {{result.plan.days}} 天 {{result.plan.nights}} 晚</text>
+      <view class="cost-list"><view class="cost-row"><text>交通</text><text>¥{{result.transport}}</text></view><view class="cost-row"><text>住宿</text><text>¥{{result.accommodation}}</text></view><view class="cost-row"><text>饮食</text><text>¥{{result.food}}</text></view><view class="cost-row"><text>门票</text><text>¥{{result.ticket}}</text></view><view class="cost-row"><text>其他</text><text>¥{{result.other}}</text></view></view>
+      <view class="emergency"><text>建议应急预算（15%）</text><text>¥{{result.emergency}}</text></view>
+      <view class="recommended"><text>建议携带总额</text><text>¥{{result.recommendedTotal}}</text></view>
+      <button class="ghost-button" bindtap="resetBudget">重置为推荐方案</button>
+    </view>
+    <view class="status-note">计算结果基于项目中的参考单价，用于课程原型与路线比较，不是实时票价。补齐真实票据后，请替换 data/trip-data.js 中的参考数据。</view>
+  </view>
+</scroll-view>

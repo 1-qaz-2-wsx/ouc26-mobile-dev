@@ -1,0 +1,15 @@
+<navigation-bar title="攻略详情" back="{{true}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell">
+    <view wx:if="{{notFound}}" class="empty-card">攻略不存在或已调整，请返回上一页。</view>
+    <block wx:if="{{guide}}">
+      <view class="article-head"><text class="tag">{{guide.category}}</text><text class="article-title">{{guide.title}}</text><text class="article-summary">{{guide.summary}}</text><text class="article-meta">约 {{guide.readingMinutes}} 分钟 · 内容版本 2026-08-30</text></view>
+      <view class="section toc card"><text class="toc-title">目录</text><text class="toc-item" wx:for="{{guide.sections}}" wx:key="title">0{{index + 1}}　{{item.title}}</text></view>
+      <view class="article-section" wx:for="{{guide.sections}}" wx:key="title"><text class="article-index">0{{index + 1}}</text><text class="article-heading">{{item.title}}</text><text class="article-body">{{item.content}}</text></view>
+      <button wx:if="{{guide.toolTarget === 'budget'}}" class="primary-button tool-button" bindtap="openTools">去计算我的预算</button>
+      <view wx:if="{{relatedPlaces.length}}" class="section"><view class="section-title">相关地点</view><view class="card"><view class="link-row" wx:for="{{relatedPlaces}}" wx:key="id" data-id="{{item.id}}" bindtap="openPlace"><text>{{item.name}}</text><text>查看 ›</text></view></view></view>
+      <view wx:if="{{relatedSegments.length}}" class="section"><view class="section-title">相关路段</view><view class="card"><view class="link-row" wx:for="{{relatedSegments}}" wx:key="id" data-id="{{item.id}}" bindtap="openSegment"><text>{{item.fromPlace.name}} → {{item.toPlace.name}}</text><text>查看 ›</text></view></view></view>
+      <view class="status-note">攻略中的旅行费用和班次属于历史经验或参考估算，不代表实时信息。</view>
+    </block>
+  </view>
+</scroll-view>

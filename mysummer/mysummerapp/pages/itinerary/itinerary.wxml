@@ -1,0 +1,25 @@
+<navigation-bar title="行程" back="{{false}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell">
+    <view class="page-intro"><text class="intro-kicker">18 DAYS · SOUTH TO NORTH</text><text class="intro-title">跟着时间轴走完整趟旅行</text><text class="intro-copy">日期、班次和真实费用将在整理原始票据后逐项补齐。</text></view>
+    <view class="timeline">
+      <view class="day-block" wx:for="{{days}}" wx:key="id" wx:for-index="dayIndex">
+        <view class="day-head" data-index="{{dayIndex}}" bindtap="toggleDay">
+          <view class="day-dot"></view>
+          <view class="day-heading"><text class="day-number">DAY {{item.day}}</text><text class="day-title">{{item.title}}</text><text class="day-date">{{item.dateText}}</text></view>
+          <text class="day-toggle">{{item.expanded ? '收起' : '展开'}}</text>
+        </view>
+        <view wx:if="{{item.expanded}}" class="day-content">
+          <view wx:if="{{!item.places.length && !item.segments.length}}" class="empty-day">{{item.summary}}</view>
+          <view class="place-node card" wx:for="{{item.places}}" wx:key="id" wx:for-item="place" data-id="{{place.id}}" bindtap="openPlace">
+            <view><text class="node-type">地点</text><text class="node-name">{{place.name}}</text><text class="node-copy">{{place.summary}}</text></view><text class="node-arrow">›</text>
+          </view>
+          <view class="segment-node" wx:for="{{item.segments}}" wx:key="id" wx:for-item="segment" data-id="{{segment.id}}" bindtap="openSegment">
+            <view class="transport-badge">{{segment.transportType}}</view>
+            <view class="segment-main"><text class="segment-title">{{segment.fromPlace.name}} → {{segment.toPlace.name}}</text><text class="segment-meta">{{segment.durationText}} · {{segment.costText}} <text wx:if="{{segment.crossDay}}">· 跨夜</text></text></view><text>›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

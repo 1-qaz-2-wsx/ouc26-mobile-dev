@@ -1,0 +1,29 @@
+page { height: 100vh; display: flex; flex-direction: column; }
+.scrollarea { flex: 1; overflow: hidden; }
+.page-intro { padding: 34rpx 28rpx; border-radius: 26rpx; color: #fdfcf7; background: #344d42; }
+.intro-kicker, .intro-title, .intro-copy { display: block; }
+.intro-kicker { opacity: .65; font-size: 19rpx; letter-spacing: 3rpx; }
+.intro-title { margin-top: 26rpx; font-size: 40rpx; font-weight: 700; }
+.intro-copy { margin-top: 14rpx; opacity: .78; font-size: 24rpx; line-height: 1.6; }
+.timeline { margin-top: 30rpx; }
+.day-block { position: relative; padding-left: 34rpx; border-left: 3rpx solid #b9c7be; }
+.day-head { position: relative; display: flex; padding: 12rpx 0 24rpx; }
+.day-dot { position: absolute; left: -47rpx; top: 20rpx; width: 24rpx; height: 24rpx; border: 5rpx solid #f5f1e8; border-radius: 50%; background: #b85e48; }
+.day-heading { flex: 1; }
+.day-number, .day-title, .day-date, .node-type, .node-name, .node-copy, .segment-title, .segment-meta { display: block; }
+.day-number { color: #b25a45; font-size: 22rpx; font-weight: 700; }
+.day-title { margin-top: 5rpx; font-size: 31rpx; font-weight: 700; }
+.day-date { margin-top: 5rpx; color: #8c8e88; font-size: 22rpx; }
+.day-toggle { color: #65736b; font-size: 23rpx; }
+.day-content { padding-bottom: 28rpx; }
+.empty-day { margin-bottom: 18rpx; color: #888b84; font-size: 24rpx; }
+.place-node { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14rpx; }
+.node-type { color: #62806f; font-size: 21rpx; }
+.node-name { margin-top: 4rpx; font-size: 30rpx; font-weight: 700; }
+.node-copy { margin-top: 8rpx; color: #747872; font-size: 23rpx; }
+.node-arrow { font-size: 38rpx; color: #849087; }
+.segment-node { display: flex; align-items: center; gap: 16rpx; margin: 10rpx 0 18rpx; padding: 20rpx; border-radius: 18rpx; background: #e7ece7; }
+.transport-badge { padding: 10rpx 12rpx; border-radius: 12rpx; color: #fff; background: #587665; font-size: 20rpx; }
+.segment-main { flex: 1; }
+.segment-title { font-weight: 700; }
+.segment-meta { margin-top: 8rpx; color: #737a74; font-size: 22rpx; }

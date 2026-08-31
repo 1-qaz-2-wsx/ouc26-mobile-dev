@@ -1,0 +1,44 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/itinerary/itinerary",
+    "pages/guides/guides",
+    "pages/tools/tools",
+    "pages/place-detail/place-detail",
+    "pages/segment-detail/segment-detail",
+    "pages/guide-detail/guide-detail"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom",
+    "backgroundColor": "#f5f1e8",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#73766f",
+    "selectedColor": "#2f6654",
+    "backgroundColor": "#fffdf7",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "地图" },
+      { "pagePath": "pages/itinerary/itinerary", "text": "行程" },
+      { "pagePath": "pages/guides/guides", "text": "攻略" },
+      { "pagePath": "pages/tools/tools", "text": "工具" }
+    ]
+  },
+  "style": "v2",
+  "renderer": "skyline",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "tagNameStyleIsolation": "legacy",
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

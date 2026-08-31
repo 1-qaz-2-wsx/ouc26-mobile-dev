@@ -1,0 +1,15 @@
+<navigation-bar title="{{place ? place.name : '地点详情'}}" back="{{true}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell">
+    <view wx:if="{{notFound}}" class="empty-card">地点不存在或数据已调整，请返回上一页。</view>
+    <block wx:if="{{place}}">
+      <view class="place-hero"><text class="hero-day">DAY {{place.visitDaysText}}</text><text class="hero-name">{{place.name}}</text><text class="hero-impression">{{place.impression}}</text><view class="hero-tags"><text class="tag" wx:for="{{place.tags}}" wx:key="*this">{{item}}</text></view></view>
+      <view class="section"><view class="section-title">我的旅行</view><view class="photo-placeholder"><text>旅行照片待补</text><text class="photo-note">后续将使用本人实拍照片替换</text></view><view class="card travel-copy">{{place.summary}}<text class="record-date">旅行日期：待补</text></view></view>
+      <view class="section"><view class="section-title">我的实际花费</view><view wx:if="{{hasKnownCost}}" class="card"><view class="cost-row" wx:for="{{costRows}}" wx:key="key"><text>{{item.label}}</text><text class="{{item.known ? 'known' : 'unknown'}}">{{item.text}}</text></view><view class="cost-total"><text>已记录合计</text><text>¥{{knownTotal}}</text></view><view wx:if="{{hasUnknownCost}}" class="cost-warning">仍有待补项目，当前合计不是完整总花费。</view></view><view wx:else class="empty-card">本次费用尚未整理，真实票据补齐前不显示虚假的 ¥0。</view></view>
+      <view class="section"><view class="section-title">穷游评价</view><view wx:if="{{scoreRows.length}}" class="card"><view class="score-row" wx:for="{{scoreRows}}" wx:key="key"><text>{{item.label}}</text><view><text class="score-value">{{item.value}} / 5</text><text class="score-track">★★★★★</text></view></view></view><view wx:else class="empty-card">该地点的评分尚未整理。</view></view>
+      <view class="section"><view class="section-title">如果你也想来</view><view class="card"><view class="tip-row" wx:for="{{place.tips}}" wx:key="*this"><text class="tip-dot">•</text><text>{{item}}</text></view></view></view>
+      <view class="section"><view class="section-title">旅程中的相邻路段</view><view class="card"><view class="link-row" wx:for="{{relatedSegments}}" wx:key="id" data-id="{{item.id}}" bindtap="openSegment"><view><text class="segment-name">{{item.fromPlace.name}} → {{item.toPlace.name}}</text><text class="segment-meta">{{item.transportType}} · {{item.durationText}} · {{item.costText}}</text></view><text>›</text></view></view></view>
+      <view class="status-note">历史旅行经历不等于当前交通信息。班次、票价和开放状态请在出发前向官方渠道复核。</view>
+    </block>
+  </view>
+</scroll-view>

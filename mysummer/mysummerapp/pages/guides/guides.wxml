@@ -1,0 +1,14 @@
+<navigation-bar title="攻略" back="{{false}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell">
+    <view class="guide-hero"><text class="guide-hero-title">不是目的地合集，
+而是一条走过的路线。</text><text class="guide-hero-copy">从交通、预算、住宿和踩坑理解如何复刻。</text></view>
+    <view class="section">
+      <view class="section-title">主题攻略</view>
+      <view class="guide-card card" wx:for="{{guides}}" wx:key="id" data-id="{{item.id}}" bindtap="openGuide">
+        <view class="guide-index">0{{index + 1}}</view>
+        <view class="guide-content"><text class="tag">{{item.category}}</text><text class="guide-title">{{item.title}}</text><text class="guide-summary">{{item.summary}}</text><text class="guide-meta">约 {{item.readingMinutes}} 分钟 · 查看攻略 ›</text></view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

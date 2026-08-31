@@ -1,0 +1,12 @@
+page { height: 100vh; display: flex; flex-direction: column; }
+.scrollarea { flex: 1; overflow: hidden; }
+.guide-hero { padding: 48rpx 34rpx; border-radius: 28rpx; background: #d8cbb3; }
+.guide-hero-title, .guide-hero-copy, .guide-title, .guide-summary, .guide-meta { display: block; }
+.guide-hero-title { color: #34483f; white-space: pre-line; font-size: 42rpx; font-weight: 700; line-height: 1.35; }
+.guide-hero-copy { margin-top: 18rpx; color: #697067; font-size: 25rpx; }
+.guide-card { display: flex; gap: 22rpx; margin-bottom: 18rpx; }
+.guide-index { color: #bd6d54; font-size: 28rpx; font-weight: 700; }
+.guide-content { flex: 1; }
+.guide-title { margin-top: 8rpx; font-size: 34rpx; font-weight: 700; }
+.guide-summary { margin-top: 12rpx; color: #6e746e; font-size: 25rpx; line-height: 1.65; }
+.guide-meta { margin-top: 18rpx; color: #527263; font-size: 23rpx; }

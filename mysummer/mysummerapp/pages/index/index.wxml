@@ -1,0 +1,46 @@
+<navigation-bar title="兴安岭穷游记" back="{{false}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<!-- Skyline 的 scroll-view 必须声明 type=list，否则内部原生地图可能不创建。 -->
+<scroll-view class="scrollarea" scroll-y type="list" show-scrollbar="{{false}}">
+  <view class="page-shell map-page">
+    <view class="hero">
+      <text class="hero-kicker">MY SUMMER JOURNEY</text>
+      <text class="hero-title">从海边一路向北</text>
+      <text class="hero-copy">沿铁路、轮渡与客运，进入森林与草原。</text>
+    </view>
+
+    <view class="stats-grid">
+      <view class="stat" wx:for="{{tripStats}}" wx:key="label">
+        <text class="stat-value">{{item.value}}</text><text class="stat-label">{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="section map-section">
+      <view class="section-title">完整路线</view>
+      <view class="section-subtitle">点击地点标记查看这一站；哈尔滨等重复节点合并展示。</view>
+      <map wx:if="{{!mapFailed}}" class="route-map" latitude="{{centerLatitude}}" longitude="{{centerLongitude}}" scale="{{mapScale}}" markers="{{markers}}" polyline="{{polyline}}" include-points="{{includePoints}}" bindmarkertap="onMarkerTap" binderror="onMapError" enable-zoom enable-scroll></map>
+      <view wx:else class="empty-card">
+        <view>地图暂时没有加载成功，仍可从下方地点列表浏览。</view>
+        <button class="ghost-button retry-button" bindtap="retryMap">重新加载地图</button>
+      </view>
+
+      <view wx:if="{{selectedPlace}}" class="place-preview card">
+        <view class="preview-top">
+          <view><text class="preview-day">DAY {{selectedPlace.visitDaysText}}</text><text class="preview-name">{{selectedPlace.name}}</text></view>
+          <text class="preview-close" bindtap="closePlaceCard">×</text>
+        </view>
+        <text class="preview-copy">{{selectedPlace.summary}}</text>
+        <view><text class="tag" wx:for="{{selectedPlace.tags}}" wx:key="*this">{{item}}</text></view>
+        <button class="primary-button" data-id="{{selectedPlace.id}}" bindtap="openPlace">查看这一站</button>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-title">全部停靠点</view>
+      <view class="place-list card">
+        <view class="link-row" wx:for="{{markers}}" wx:key="placeId" data-id="{{item.placeId}}" bindtap="openPlace">
+          <text>{{item.callout.content}}</text><text class="muted">查看 ›</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

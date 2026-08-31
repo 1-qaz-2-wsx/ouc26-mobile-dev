@@ -1,0 +1,15 @@
+<navigation-bar title="路段详情" back="{{true}}" color="#20372f" background="#fffdf7"></navigation-bar>
+<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
+  <view class="page-shell">
+    <view wx:if="{{notFound}}" class="empty-card">路段不存在或数据已调整，请返回上一页。</view>
+    <block wx:if="{{segment}}">
+      <view class="route-hero"><text class="route-kicker">SEGMENT {{segment.displayOrder}}</text><text class="route-title">{{segment.fromPlace.name}} → {{segment.toPlace.name}}</text><view class="route-badges"><text class="route-badge">{{segment.transportType}}</text><text wx:if="{{segment.crossDay}}" class="route-badge warn">跨夜 · 次日到达</text></view></view>
+      <view class="summary-grid"><view class="summary-item"><text class="summary-value">{{segment.distanceText}}</text><text class="summary-label">距离</text></view><view class="summary-item"><text class="summary-value">{{segment.durationText}}</text><text class="summary-label">时长</text></view><view class="summary-item"><text class="summary-value">{{segment.costText}}</text><text class="summary-label">实际交通费</text></view></view>
+      <view class="section"><view class="section-title">我的实际路线</view><view wx:if="{{segment.timeline.length}}" class="card"><view wx:for="{{segment.timeline}}" wx:key="displayOrder">{{item.dateTime}} · {{item.description}}</view></view><view wx:else class="empty-card">详细出发、换乘和到达时间待补。基础路线仍可从上方查看。</view></view>
+      <view class="section"><view class="section-title">沿途记录</view><view class="photo-placeholder">交通凭证与沿途照片待补</view><view class="card description">{{segment.summary}}</view></view>
+      <view class="section"><view class="section-title">踩坑提醒</view><view class="card"><view class="tip-row" wx:for="{{segment.tips}}" wx:key="*this"><text>•</text><text>{{item}}</text></view></view></view>
+      <view class="section"><view class="section-title">起点与终点</view><view class="card"><view class="link-row" data-id="{{segment.fromPlace.id}}" bindtap="openPlace"><text>起点 · {{segment.fromPlace.name}}</text><text>查看 ›</text></view><view class="link-row" data-id="{{segment.toPlace.id}}" bindtap="openPlace"><text>终点 · {{segment.toPlace.name}}</text><text>查看 ›</text></view></view></view>
+      <view class="status-note">班次、票价和运行状态会变化。本页当前记录为旅行资料框架，真实票据整理完成前以“待补”显示。</view>
+    </block>
+  </view>
+</scroll-view>
