@@ -1,0 +1,5 @@
+<view class="history-page {{isDark ? 'theme-dark' : ''}}">
+  <view class="history-heading"><text>最近阅读</text><button wx:if="{{newsList.length}}" bindtap="clearAll">清空</button></view>
+  <view wx:if="{{newsList.length}}" class="history-card"><view class="history-item" wx:for="{{newsList}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}"><image src="{{item.poster}}" mode="aspectFill"></image><view><text>{{item.title}}</text><text>阅读于 {{item.readAtText}}</text></view></view></view>
+  <view wx:else class="empty">暂无阅读历史</view>
+</view>

@@ -1,0 +1,51 @@
+<view class="page {{isDark ? 'theme-dark' : ''}}">
+  <view class="page-header">
+    <text class="eyebrow">OUC NEWS</text>
+    <text class="page-title">观海听涛 · 校园资讯</text>
+    <text class="page-desc">聚焦海大新鲜事，记录校园每一刻</text>
+  </view>
+
+  <view class="swiper-card">
+    <swiper indicator-dots autoplay circular interval="5000" duration="500" indicator-active-color="#ffffff">
+      <swiper-item wx:for="{{swiperImg}}" wx:key="src">
+        <image src="{{item.src}}" mode="aspectFill"></image>
+        <view class="swiper-mask"></view><text class="swiper-title">{{item.title}}</text>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <view class="search-box">
+    <text>⌕</text><input value="{{keyword}}" bindinput="onSearchInput" placeholder="搜索新闻标题或摘要"></input>
+    <text wx:if="{{keyword}}" bindtap="clearSearch">×</text>
+  </view>
+  <scroll-view class="category-scroll" scroll-x show-scrollbar="{{false}}">
+    <view class="category-row">
+      <text wx:for="{{categories}}" wx:key="*this" data-category="{{item}}" bindtap="selectCategory" class="category {{activeCategory === item ? 'category-active' : ''}}">{{item}}</text>
+    </view>
+  </scroll-view>
+
+  <view class="section-heading"><text class="section-title">最新资讯</text><text>{{newsList.length}} 条</text></view>
+  <view wx:if="{{newsList.length}}" class="news-list list-card">
+    <view class="news-item {{item.isRead ? 'news-read' : ''}}" wx:for="{{newsList}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}">
+      <image class="news-poster" src="{{item.poster}}" mode="aspectFill"></image>
+      <view class="news-info">
+        <text class="news-title">{{item.title}}</text>
+        <view class="news-meta"><text class="news-category">{{item.category}}</text><text>{{item.add_date}}</text></view>
+      </view>
+      <view class="item-actions">
+        <text class="heart {{item.isFavorite ? 'heart-active' : ''}}" catchtap="toggleFavorite" data-id="{{item.id}}">{{item.isFavorite ? '♥' : '♡'}}</text>
+        <text class="more" catchtap="openActions" data-id="{{item.id}}">···</text>
+      </view>
+    </view>
+  </view>
+  <view wx:else class="empty"><text class="empty-icon">⌕</text><text>没有找到相关新闻</text></view>
+
+  <view wx:if="{{showActions}}" class="mask" bindtap="closeActions"></view>
+  <view class="action-sheet {{showActions ? 'action-show' : ''}}">
+    <text class="action-title">{{activeNews.title}}</text>
+    <button open-type="share" data-id="{{activeNews.id}}">分享给好友</button>
+    <button bindtap="toggleActiveFavorite">{{activeNews && activeNews.isFavorite ? '取消收藏' : '收藏新闻'}}</button>
+    <button bindtap="toggleRead">标记已读 / 未读</button>
+    <button bindtap="closeActions">取消</button>
+  </view>
+</view>

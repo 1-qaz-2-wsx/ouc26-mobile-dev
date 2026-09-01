@@ -1,0 +1,46 @@
+<view class="game-page">
+  <view class="game-head">
+    <view><text class="eyebrow">ICE FIELD · LEVEL {{levelText}}</text><text class="game-title">{{levelName}}</text></view>
+    <view class="move-card" aria-label="已移动 {{moves}} 步"><text>{{moves}}</text><text>移动步数</text></view>
+  </view>
+
+  <view class="board-card">
+    <view class="board-top"><text>将全部补给箱推到目标点</text><text>{{bestMoves ? '最佳 ' + bestMoves + ' 步' : '推荐 ' + parMoves + ' 步'}}</text></view>
+    <view class="canvas-shell" style="width:{{canvasSize}}px;height:{{canvasSize}}px">
+      <canvas canvas-id="gameCanvas" class="game-canvas" style="width:{{canvasSize}}px;height:{{canvasSize}}px" disable-scroll="true" catchtouchstart="onTouchStart" catchtouchmove="onTouchMove" catchtouchend="onTouchEnd" catchtouchcancel="onTouchCancel" aria-label="8乘8推箱子棋盘，可在棋盘上滑动控制方向"></canvas>
+    </view>
+    <view class="legend">
+      <view><text class="dot target"></text><text>目标</text></view>
+      <view><text class="dot box"></text><text>箱子</text></view>
+      <view><text class="dot player"></text><text>角色</text></view>
+    </view>
+  </view>
+
+  <view class="status-banner {{statusTone}}" aria-live="polite">{{statusText}}</view>
+
+  <view class="controller">
+    <view class="controller-row controller-top">
+      <button class="direction {{invalidDirection === 'up' ? 'invalid-key' : ''}} {{hintDirection === 'up' ? 'hint-key' : ''}}" bindtap="up" hover-class="key-active" aria-label="向上移动">↑</button>
+    </view>
+    <view class="controller-row controller-bottom">
+      <button class="direction {{invalidDirection === 'left' ? 'invalid-key' : ''}} {{hintDirection === 'left' ? 'hint-key' : ''}}" bindtap="left" hover-class="key-active" aria-label="向左移动">←</button>
+      <button class="direction {{invalidDirection === 'down' ? 'invalid-key' : ''}} {{hintDirection === 'down' ? 'hint-key' : ''}}" bindtap="down" hover-class="key-active" aria-label="向下移动">↓</button>
+      <button class="direction {{invalidDirection === 'right' ? 'invalid-key' : ''}} {{hintDirection === 'right' ? 'hint-key' : ''}}" bindtap="right" hover-class="key-active" aria-label="向右移动">→</button>
+    </view>
+  </view>
+
+  <view class="game-actions">
+    <view class="action-row">
+      <button bindtap="undoMove" disabled="{{!canUndo || isComplete}}">{{undoUnlimited ? '撤销一步（不限）' : '撤销一步（' + undoRemaining + '）'}}</button>
+      <button bindtap="showHint" disabled="{{isComplete || hintLoading || hintRemaining <= 0}}">{{hintLoading ? '正在计算…' : '方向提示（' + hintRemaining + '）'}}</button>
+    </view>
+    <view class="action-row">
+      <button bindtap="restartGame">重新开始</button>
+      <button bindtap="backToLevels">关卡列表</button>
+    </view>
+  </view>
+  <view class="setting-row">
+    <text>触觉反馈</text>
+    <switch checked="{{vibrationEnabled}}" bindchange="toggleVibration" color="#176b7a" aria-label="触觉反馈开关"></switch>
+  </view>
+</view>

@@ -1,0 +1,50 @@
+<view class="my-page {{isDark ? 'theme-dark' : ''}}">
+  <view class="profile-panel">
+    <block wx:if="{{isLogin}}">
+      <image wx:if="{{userInfo.avatarUrl}}" class="avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="avatar-placeholder">👤</view>
+      <text class="nickname">{{userInfo.nickName}}</text><text class="welcome">微信已连接 · {{userInfo.userId}}</text>
+      <text class="login-time">登录于 {{userInfo.loginAtText}}</text>
+      <button class="account-button" bindtap="toggleAccountPanel">{{showAccountPanel ? '收起账号管理' : '资料与账号'}}</button>
+    </block>
+    <block wx:else>
+      <view class="avatar-placeholder">👤</view><text class="login-title">选择微信头像后即可登录</text>
+      <button class="login-button" loading="{{isLogging || isChoosingAvatar}}" disabled="{{isLogging || isChoosingAvatar}}" open-type="chooseAvatar" bindtap="beginAvatarChoice" bindchooseavatar="onLoginAvatarChosen">{{isLogging ? '正在连接微信…' : (isChoosingAvatar ? '正在打开头像选择…' : '微信头像登录')}}</button>
+    </block>
+  </view>
+
+  <view wx:if="{{isLogin && showAccountPanel}}" class="account-panel">
+    <text class="account-panel-title">个人资料</text>
+    <text class="account-panel-tip">头像和昵称仅保存在本机</text>
+    <view class="account-actions" wx:if="{{!isEditingNickname}}">
+      <button open-type="chooseAvatar" bindtap="beginAvatarChoice" bindchooseavatar="onChangeAvatar" disabled="{{isChoosingAvatar}}">{{isChoosingAvatar ? '头像选择中…' : '修改头像'}}</button>
+      <button bindtap="startNicknameEdit">修改昵称</button>
+      <button class="logout-button" bindtap="logout">退出登录</button>
+    </view>
+    <view wx:else class="nickname-editor">
+      <input type="nickname" value="{{nicknameDraft}}" maxlength="20" bindinput="onNicknameInput" placeholder="请输入新昵称"></input>
+      <view><button bindtap="cancelNicknameEdit">取消</button><button bindtap="saveNickname">保存昵称</button></view>
+    </view>
+  </view>
+
+  <view wx:if="{{isLogin}}" class="stats-row">
+    <view><text>{{number}}</text><text>我的收藏</text></view><view bindtap="goHistory"><text>{{historyCount}}</text><text>阅读历史</text></view><view bindtap="goSettings"><text>⚙</text><text>偏好设置</text></view>
+  </view>
+  <view class="favorite-heading"><view><text class="favorite-title">我的收藏</text><text class="favorite-subtitle">MY FAVORITES</text></view><button wx:if="{{isLogin && number}}" bindtap="toggleManage">{{isManaging ? '完成' : '管理'}}</button></view>
+
+  <view wx:if="{{isLogin && number}}" class="favorite-card">
+    <view class="favorite-item" wx:for="{{newsList}}" wx:key="id" bindtap="handleFavoriteTap" data-id="{{item.id}}">
+      <view wx:if="{{isManaging}}" class="checkbox {{item.selected ? 'checked' : ''}}">{{item.selected ? '✓' : ''}}</view>
+      <image src="{{item.poster}}" mode="aspectFill"></image><view class="favorite-info"><text>{{item.title}}</text><text>{{item.category}} · {{item.add_date}}</text></view>
+      <text wx:if="{{!isManaging}}" class="quick-heart" catchtap="removeOne" data-id="{{item.id}}">♥</text>
+    </view>
+  </view>
+  <view wx:else class="empty-favorites"><text class="empty-icon">☆</text><text>{{isLogin ? '还没有收藏新闻' : '请先授权登录查看收藏'}}</text></view>
+
+  <view wx:if="{{isManaging}}" class="batch-bar">
+    <view bindtap="toggleSelectAll"><text class="checkbox {{allSelected ? 'checked' : ''}}">{{allSelected ? '✓' : ''}}</text><text>全选</text></view>
+    <button bindtap="batchRemove">取消收藏 ({{selectedIds.length}})</button>
+    <button open-type="share" data-mode="collection" disabled="{{!selectedIds.length}}">分享合集</button>
+  </view>
+
+</view>

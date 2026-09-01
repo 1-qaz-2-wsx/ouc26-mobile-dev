@@ -1,0 +1,8 @@
+<view class="collection-page {{isDark ? 'theme-dark' : ''}}">
+  <view class="collection-header"><text>海大新闻精选</text><text>共 {{newsList.length}} 条 · 来自好友分享</text></view>
+  <view wx:if="{{newsList.length}}" class="collection-card">
+    <view class="collection-item" wx:for="{{newsList}}" wx:key="id" bindtap="goToDetail" data-id="{{item.id}}"><image src="{{item.poster}}" mode="aspectFill"></image><view><text>{{item.title}}</text><text>{{item.category}} · {{item.add_date}}</text></view></view>
+  </view>
+  <view wx:else class="empty">该新闻合集为空或已失效</view>
+  <button wx:if="{{newsList.length}}" class="share-button" open-type="share">继续分享合集</button>
+</view>

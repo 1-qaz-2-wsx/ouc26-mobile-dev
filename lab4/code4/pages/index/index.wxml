@@ -1,0 +1,53 @@
+<view class="home-page">
+  <view class="hero">
+    <text class="hero-kicker">SOKOBAN · ICE FIELD</text>
+    <text class="hero-title">冰原推箱子</text>
+    <text class="hero-desc">规划路线，把每个补给箱送到目标点</text>
+    <view class="progress-card" aria-label="已完成 {{completedCount}} 个关卡，共获得 {{totalStars}} 颗星">
+      <view><text class="progress-number">{{completedCount}}</text><text>/ {{totalLevels}} 关</text></view>
+      <text>累计 {{totalStars}} / {{totalPossibleStars}} 星</text>
+    </view>
+  </view>
+
+  <view class="content">
+    <view class="mode-card">
+      <view>
+        <text class="mode-title">{{practiceMode ? '练习模式' : '挑战模式'}}</text>
+        <text class="mode-desc">{{practiceMode ? '全部关卡开放，适合课堂演示' : '完成前一关后解锁下一关'}}</text>
+      </view>
+      <switch checked="{{practiceMode}}" bindchange="togglePracticeMode" color="#176b7a" aria-label="练习模式开关"></switch>
+    </view>
+
+    <view class="section-title">
+      <view><text>选择关卡</text><text>LEVEL SELECT</text></view>
+      <text>{{practiceMode ? '全部开放' : '顺序解锁'}}</text>
+    </view>
+
+    <view class="level-group" wx:for="{{levelGroups}}" wx:key="name" wx:for-item="group">
+      <view class="group-head">
+        <view class="group-order">{{group.order}}</view>
+        <view><text class="group-name">{{group.name}}</text><text class="group-desc">{{group.description}}</text></view>
+      </view>
+      <view class="level-grid">
+        <view class="level-card {{item.locked ? 'locked' : ''}}" wx:for="{{group.levels}}" wx:key="id" wx:for-item="item" bindtap="chooseLevel" data-level="{{item.id}}" data-locked="{{item.locked}}" hover-class="{{item.locked ? 'none' : 'card-active'}}" aria-role="button" aria-label="第 {{item.number}} 关 {{item.name}}，{{item.locked ? '尚未解锁' : (item.best ? '最佳 ' + item.best + ' 步' : '尚未通关')}}">
+          <view class="preview-wrap">
+            <image src="{{item.image}}" mode="aspectFill" aria-label="{{item.name}}关卡预览"></image>
+            <text class="level-number">{{item.number}}</text>
+            <text wx:if="{{item.best}}" class="complete-badge">已通关</text>
+            <view wx:if="{{item.locked}}" class="lock-overlay"><text>LOCKED</text><text>完成上一关解锁</text></view>
+          </view>
+          <view class="level-info">
+            <view><text>{{item.name}}</text><text>{{item.difficulty}}</text></view>
+            <text class="star-text">{{item.locked ? '等待解锁' : item.starsText}}</text>
+            <text class="best-text">{{item.best ? '最佳 ' + item.best + ' 步 · 推荐 ' + item.parMoves + ' 步' : '推荐 ' + item.parMoves + ' 步'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="rules-card">
+      <view class="rules-icon" aria-hidden="true">TIP</view>
+      <view><text class="rules-title">玩法提示</text><text class="rules-text">只能推不能拉。先观察死角；误操作后可撤销，黄色提示会标出风险。</text></view>
+    </view>
+  </view>
+</view>
