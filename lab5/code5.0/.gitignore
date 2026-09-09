@@ -10,3 +10,5 @@
 /.clang-tidy
 **/.test
 /.appanalyzer
+# WorkBuddy 本地工作记忆/日志（不应提交到公开仓库）
+/.workbuddy
