@@ -1,0 +1,43 @@
+<view class="detail-page">
+  <view class="state-box" wx:if="{{loading}}">
+    <text class="state-title">正在展开照片</text>
+  </view>
+  <view class="state-box" wx:elif="{{loadError}}" bindtap="loadPhoto">
+    <view class="state-mark"></view>
+    <text class="state-title">暂时无法查看</text>
+    <text class="state-desc">{{loadError}}，点击重试</text>
+  </view>
+
+  <block wx:elif="{{photo}}">
+    <image class="image" src="{{photo.photoUrl}}" mode="widthFix" bindtap="previewPhoto"></image>
+    <view class="photo-meta">
+      <text class="detail-kicker">{{photo.addDate}}</text>
+      <text class="detail-caption" wx:if="{{photo.caption}}">{{photo.caption}}</text>
+      <navigator class="author-line" url="../homepage/homepage?id={{photo._openid}}" hover-class="none">
+        <image wx:if="{{photo.avatarUrl}}" class="avatar" src="{{photo.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="avatar-fallback">{{photo.avatarLetter}}</view>
+        <view class="title">
+          <text class="nickName">{{photo.displayName}}</text>
+          <text class="address">{{photo.displayLocation}}</text>
+        </view>
+      </navigator>
+    </view>
+
+    <view class="action-panel">
+      <view class="quick-actions">
+        <button class="quick-action {{photo.liked ? 'active' : ''}}" bindtap="toggleLike">{{photo.liked ? '已点赞' : '点赞'}} {{photo.likeCount}}</button>
+        <button class="quick-action {{photo.favorited ? 'active' : ''}}" bindtap="toggleFavorite">{{photo.favorited ? '已收藏' : '收藏'}}</button>
+      </view>
+      <button class="primary-button" bindtap="downloadPhoto">下载到本地</button>
+      <button class="secondary-button" open-type="share">分享给好友</button>
+      <button class="secondary-button" bindtap="previewPhoto">全屏预览</button>
+      <button wx:if="{{isOwner}}" class="danger-button" bindtap="deletePhoto" loading="{{deleting}}" disabled="{{deleting}}">{{deleting ? '正在删除' : '删除这张照片'}}</button>
+    </view>
+    <view class="comment-panel">
+      <view class="comment-head"><text>评论</text><text>{{photo.commentCount}}</text></view>
+      <view class="comment-compose"><input value="{{commentText}}" focus="{{commentFocus}}" maxlength="80" placeholder="说说你的感受…" bindinput="onCommentInput" confirm-type="send" bindconfirm="submitComment"/><button bindtap="submitComment">发送</button></view>
+      <view class="comment-item" wx:for="{{comments}}" wx:key="id"><view class="comment-avatar">{{item.letter || '我'}}</view><view><text class="comment-name">{{item.name}} · {{item.time}}</text><text class="comment-content">{{item.content}}</text></view></view>
+      <text class="comment-empty" wx:if="{{!comments.length}}">还没有评论，来做第一个留言的人</text>
+    </view>
+  </block>
+</view>

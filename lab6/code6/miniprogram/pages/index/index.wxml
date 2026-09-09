@@ -1,0 +1,80 @@
+<view class="container">
+  <view class="index-head">
+    <view>
+      <text class="section-label">图片分享社区</text>
+      <text class="page-title">今日影像</text>
+    </view>
+    <view class="message-entry" bindtap="openMessages">
+      <view class="message-icon"></view><text wx:if="{{unreadCount}}">{{unreadCount > 9 ? '9+' : unreadCount}}</text>
+    </view>
+  </view>
+
+  <view class="discover-tools">
+    <view class="search-box"><view class="search-icon"></view><input value="{{keyword}}" placeholder="搜索作者、地点或作品" bindinput="onSearchInput"/><text wx:if="{{keyword}}" bindtap="clearSearch">清除</text></view>
+    <view class="feed-tabs">
+      <view class="feed-tab {{feedTab === 'following' ? 'active' : ''}}" data-tab="following" bindtap="switchFeed">关注</view>
+      <view class="feed-tab {{feedTab === 'community' ? 'active' : ''}}" data-tab="community" bindtap="switchFeed">社区</view>
+    </view>
+  </view>
+
+  <view class="state-box" wx:if="{{loading && !photoList.length}}">
+    <view class="loader"></view>
+    <text class="state-title">正在冲洗照片</text>
+  </view>
+
+  <view class="state-box" wx:elif="{{loadError && !photoList.length}}" bindtap="retryLoad">
+    <view class="state-mark"></view>
+    <text class="state-title">暂时没有取到照片</text>
+    <text class="state-desc">{{loadError}}</text>
+  </view>
+
+  <view class="state-box" wx:elif="{{!photoList.length}}">
+    <view class="state-mark"></view>
+    <text class="state-title">第一张照片正等着你</text>
+    <text class="state-desc">点“上传图片”，分享你的第一张作品</text>
+  </view>
+
+  <view class="state-box compact-state" wx:elif="{{!visiblePhotos.length}}">
+    <view class="state-mark"></view>
+    <text class="state-title">{{feedTab === 'following' ? '关注的人还没有新作品' : '没有找到相关作品'}}</text>
+    <text class="state-desc">{{feedTab === 'following' ? '去社区发现喜欢的作者吧' : '换一个关键词试试'}}</text>
+  </view>
+
+  <view class="card" wx:for="{{visiblePhotos}}" wx:key="_id">
+    <view class="card-head">
+      <navigator url="../homepage/homepage?id={{item._openid}}" hover-class="none">
+        <image wx:if="{{item.avatarUrl}}" class="avatar" src="{{item.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="avatar-fallback">{{item.avatarLetter}}</view>
+      </navigator>
+      <view class="title">
+        <text class="nickName">{{item.displayName}}</text>
+        <text class="address">{{item.displayLocation}}</text>
+      </view>
+      <text class="card-index">NO.{{item.displayIndex}}</text>
+    </view>
+    <view class="card-body">
+      <navigator url="../detail/detail?id={{item._id}}" hover-class="none">
+        <image src="{{item.photoUrl}}" mode="widthFix" lazy-load="true"></image>
+      </navigator>
+    </view>
+    <text class="card-caption" wx:if="{{item.caption}}">{{item.caption}}</text>
+    <view class="social-row">
+      <button class="social-action {{item.liked ? 'active' : ''}}" data-id="{{item._id}}" bindtap="toggleLike"><view class="heart-icon"></view><text>{{item.likeCount}}</text></button>
+      <button class="social-action" data-id="{{item._id}}" bindtap="openComments"><view class="comment-icon"></view><text>{{item.commentCount}}</text></button>
+      <button class="social-action save-action {{item.favorited ? 'active' : ''}}" data-id="{{item._id}}" bindtap="toggleFavorite"><view class="save-icon"></view><text>{{item.favorited ? '已收藏' : '收藏'}}</text></button>
+    </view>
+    <view class="card-foot">
+      <text>发布于 {{item.addDate}}</text>
+    </view>
+  </view>
+
+  <view class="list-status" wx:if="{{loadingMore}}">正在加载更多照片…</view>
+  <view class="list-status" wx:if="{{photoList.length && !hasMore}}">已经看到社区的第一张照片</view>
+
+  <view class="floatBtn index-float">
+    <button class="upload-fab" bindtap="goToAdd" hover-class="upload-fab-active">
+      <view class="plus-icon"></view>
+      <text>上传图片</text>
+    </button>
+  </view>
+</view>

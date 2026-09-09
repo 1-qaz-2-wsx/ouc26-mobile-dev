@@ -1,0 +1,95 @@
+.detail-page {
+  min-height: 100vh;
+  padding-bottom: 70rpx;
+  background: #17211b;
+}
+
+.detail-page .state-box,
+.detail-page .state-title {
+  color: #ffffff;
+}
+
+.image {
+  display: block;
+  width: 750rpx;
+  min-height: 360rpx;
+  background: #0f1612;
+}
+
+.photo-meta {
+  position: relative;
+  margin: -12rpx 28rpx 0;
+  padding: 34rpx 30rpx;
+  border-radius: 6rpx 32rpx 6rpx 32rpx;
+  background: #fffdf8;
+}
+
+.detail-kicker {
+  display: block;
+  color: #e95a3f;
+  font-size: 20rpx;
+  font-weight: 600;
+  letter-spacing: 3rpx;
+}
+
+.detail-caption {
+  display: block;
+  margin: 22rpx 0 28rpx;
+  color: #17211b;
+  font-family: "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.author-line {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 2rpx solid rgba(23, 33, 27, 0.1);
+}
+
+.author-line .avatar,
+.author-line .avatar-fallback {
+  width: 72rpx;
+  height: 72rpx;
+  font-size: 28rpx;
+}
+
+.action-panel {
+  padding: 34rpx 50rpx 0;
+}
+
+.action-panel button {
+  margin: 16rpx 0;
+}
+
+.action-panel .secondary-button {
+  border-color: #d4a94e;
+  color: #fffdf8;
+}
+.action-panel .danger-button { margin-top: 28rpx; }
+.quick-actions { display:flex; margin-bottom:12rpx; }
+.quick-action { flex:1; height:70rpx; margin:0 8rpx; border:2rpx solid #718078; background:transparent; color:#fffdf8; font-size:24rpx; line-height:66rpx; }
+.quick-action.active { border-color:#e95a3f; color:#e95a3f; }
+.comment-panel { margin:36rpx 28rpx 0; padding:30rpx; border-radius:28rpx 8rpx 28rpx 8rpx; background:#fffdf8; }
+.comment-head { display:flex; justify-content:space-between; font-family:"Songti SC",serif; font-size:34rpx; font-weight:700; }
+.comment-head text:last-child { color:#718078; font-family:"PingFang SC",sans-serif; font-size:22rpx; }
+.comment-compose { display:flex; margin:24rpx 0; }
+.comment-compose input { height:72rpx; flex:1; padding:0 20rpx; border:2rpx solid rgba(23,33,27,.12); border-radius:18rpx 4rpx 18rpx 4rpx; background:#f7f4ee; font-size:24rpx; }
+.comment-compose button { width:110rpx; height:72rpx; margin:0 0 0 12rpx; padding:0; border-radius:4rpx 16rpx 4rpx 16rpx; background:#246b4b; color:#fff; font-size:23rpx; line-height:72rpx; }
+.comment-item { display:flex; padding:20rpx 0; border-top:2rpx solid rgba(23,33,27,.08); }
+.comment-avatar { display:flex; width:58rpx; height:58rpx; align-items:center; justify-content:center; margin-right:16rpx; border-radius:50%; background:#dfe9df; color:#246b4b; font-weight:700; }
+.comment-name,.comment-content { display:block; }
+.comment-name { color:#718078; font-size:21rpx; }
+.comment-content { margin-top:7rpx; color:#17211b; font-size:25rpx; }
+.comment-empty { display:block; padding:26rpx 0 6rpx; color:#718078; font-size:23rpx; text-align:center; }
+
+.action-tip {
+  display: block;
+  margin-top: 22rpx;
+  color: #9ca9a1;
+  font-size: 22rpx;
+  text-align: center;
+}

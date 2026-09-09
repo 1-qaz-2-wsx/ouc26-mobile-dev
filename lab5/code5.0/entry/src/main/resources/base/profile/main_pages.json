@@ -1,0 +1,10 @@
+{
+  "src": [
+    "pages/MainPage",
+    "pages/ScientificPage",
+    "pages/RelationshipPage",
+    "pages/BaseConverterPage",
+    "pages/UnitConverterPage",
+    "pages/CurrencyConverterPage"
+  ]
+}

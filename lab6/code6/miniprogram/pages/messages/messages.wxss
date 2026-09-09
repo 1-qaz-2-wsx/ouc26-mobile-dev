@@ -1,0 +1,18 @@
+.messages-page { padding-bottom:70rpx; }
+.messages-head { display:flex; align-items:flex-start; justify-content:space-between; }
+.messages-head .page-title { display:block; margin:6rpx 0 24rpx; }
+.messages-head button { height:60rpx; margin:24rpx 0 0; padding:0 20rpx; border:2rpx solid #246b4b; border-radius:6rpx 18rpx 6rpx 18rpx; background:transparent; color:#246b4b; font-size:22rpx; line-height:56rpx; }
+.message-summary { display:flex; align-items:center; margin-bottom:28rpx; padding:28rpx; border-radius:8rpx 28rpx 8rpx 28rpx; background:#17211b; color:#fffdf8; }
+.message-summary>text { margin-right:24rpx; color:#d4a94e; font-family:"Songti SC",serif; font-size:62rpx; font-weight:700; }
+.message-summary view text { display:block; font-size:26rpx; }
+.message-summary view text:last-child { margin-top:7rpx; color:#9eaaa2; font-size:20rpx; }
+.message-card { display:flex; margin-bottom:16rpx; padding:26rpx; border:2rpx solid rgba(23,33,27,.08); border-radius:24rpx 6rpx 24rpx 6rpx; background:#fffdf8; }
+.message-card.unread { border-left:7rpx solid #e95a3f; }
+.message-dot { width:18rpx; height:18rpx; flex:none; margin:9rpx 20rpx 0 0; border:3rpx solid #718078; border-radius:50%; }
+.unread .message-dot { border:0; background:#e95a3f; }
+.message-copy { flex:1; }
+.message-copy view { display:flex; justify-content:space-between; }
+.message-type,.message-time { color:#718078; font-size:21rpx; }
+.message-title,.message-content { display:block; }
+.message-title { margin-top:10rpx; color:#17211b; font-size:29rpx; font-weight:600; }
+.message-content { margin-top:7rpx; color:#718078; font-size:23rpx; }

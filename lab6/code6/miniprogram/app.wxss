@@ -1,0 +1,249 @@
+page {
+  min-height: 100%;
+  background: #f7f4ee;
+  color: #17211b;
+  font-family: "PingFang SC", sans-serif;
+}
+
+view,
+text,
+image,
+button,
+input,
+textarea {
+  box-sizing: border-box;
+}
+
+button::after {
+  border: none;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+  flex-direction: column;
+  padding: 24rpx 24rpx 190rpx;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(212, 169, 78, 0.18) 0, rgba(212, 169, 78, 0) 270rpx),
+    #f7f4ee;
+}
+
+.page-title {
+  margin: 18rpx 10rpx 28rpx;
+  font-family: "Songti SC", serif;
+  font-size: 56rpx;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.section-label {
+  color: #718078;
+  font-size: 23rpx;
+  letter-spacing: 2rpx;
+}
+
+.card {
+  width: 100%;
+  overflow: hidden;
+  margin: 14rpx 0 22rpx;
+  border: 2rpx solid rgba(23, 33, 27, 0.1);
+  border-radius: 28rpx 8rpx 28rpx 8rpx;
+  background: #fffdf8;
+  box-shadow: 0 12rpx 34rpx rgba(23, 33, 27, 0.08);
+}
+
+.card-head {
+  display: flex;
+  min-height: 132rpx;
+  align-items: center;
+  padding: 22rpx 24rpx;
+}
+
+.avatar,
+.avatar-fallback {
+  width: 88rpx;
+  height: 88rpx;
+  flex: none;
+  margin-right: 22rpx;
+  border-radius: 50%;
+  background: #dfe9df;
+}
+
+.avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #246b4b;
+  font-family: "Songti SC", serif;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.title {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.nickName {
+  overflow: hidden;
+  color: #17211b;
+  font-size: 32rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.address {
+  margin-top: 8rpx;
+  color: #718078;
+  font-size: 24rpx;
+  letter-spacing: 1rpx;
+}
+
+.card-index {
+  align-self: flex-start;
+  padding: 6rpx 12rpx;
+  border: 2rpx solid #d4a94e;
+  border-radius: 999rpx;
+  color: #8a681c;
+  font-size: 20rpx;
+  font-weight: 600;
+}
+
+.card-body {
+  position: relative;
+  min-height: 240rpx;
+  background: #e9e6df;
+}
+
+.card-body image {
+  display: block;
+  width: 100%;
+}
+
+.card-caption {
+  padding: 22rpx 24rpx 0;
+  color: #36443c;
+  font-family: "Songti SC", serif;
+  font-size: 30rpx;
+  line-height: 1.6;
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx 24rpx;
+  color: #7a817d;
+  font-size: 23rpx;
+}
+
+.card-foot::before {
+  width: 54rpx;
+  height: 4rpx;
+  background: #e95a3f;
+  content: "";
+}
+
+.floatBtn {
+  position: fixed;
+  z-index: 10;
+  right: 28rpx;
+  bottom: calc(36rpx + env(safe-area-inset-bottom));
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  display: flex;
+  height: 92rpx;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8rpx 24rpx 8rpx 24rpx;
+  font-size: 29rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.primary-button {
+  background: #246b4b;
+  color: #ffffff;
+}
+
+.secondary-button {
+  border: 2rpx solid #246b4b;
+  background: transparent;
+  color: #246b4b;
+}
+
+.danger-button {
+  background: #e95a3f;
+  color: #ffffff;
+}
+
+.state-box {
+  display: flex;
+  min-height: 440rpx;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 80rpx 48rpx;
+  color: #718078;
+  text-align: center;
+}
+
+.state-mark {
+  position: relative;
+  width: 112rpx;
+  height: 88rpx;
+  margin-bottom: 28rpx;
+  border: 4rpx solid #246b4b;
+  border-radius: 8rpx 28rpx 8rpx 28rpx;
+}
+
+.state-mark::before {
+  position: absolute;
+  top: 18rpx;
+  left: 20rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: #d4a94e;
+  content: "";
+}
+
+.state-mark::after {
+  position: absolute;
+  right: 16rpx;
+  bottom: 14rpx;
+  width: 54rpx;
+  height: 34rpx;
+  border-left: 4rpx solid #e95a3f;
+  border-top: 4rpx solid #e95a3f;
+  content: "";
+  transform: skewY(-32deg);
+}
+
+.state-title {
+  color: #17211b;
+  font-family: "Songti SC", serif;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.state-desc {
+  max-width: 520rpx;
+  margin-top: 14rpx;
+  font-size: 25rpx;
+  line-height: 1.7;
+}
+
+.list-status {
+  padding: 30rpx 0 10rpx;
+  color: #718078;
+  font-size: 24rpx;
+  text-align: center;
+}

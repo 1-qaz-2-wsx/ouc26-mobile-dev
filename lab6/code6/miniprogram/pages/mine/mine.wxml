@@ -1,0 +1,52 @@
+<view class="mine-page">
+  <view class="logged-out-state" wx:if="{{loggedOut}}">
+    <view class="state-mark"></view>
+    <text class="state-title">你已退出登录</text>
+    <text class="state-desc">重新登录后可以查看和管理自己的作品</text>
+    <button class="primary-button login-again" bindtap="loginAgain">重新登录</button>
+  </view>
+  <block wx:else>
+  <view class="profile-hero">
+    <view class="profile-copy">
+      <text class="profile-label">我的影像档案</text>
+      <text class="profile-name">{{profile ? profile.displayName : '微信用户'}}</text>
+      <text class="profile-place">{{profile ? profile.displayLocation : '记录从第一张照片开始'}}</text>
+      <button class="profile-action" wx:if="{{!profile}}" bindtap="completeProfile">完善资料</button>
+      <button class="profile-action" wx:else bindtap="openEdit">编辑资料</button>
+    </view>
+    <image wx:if="{{profile && profile.avatarUrl}}" class="profile-avatar" src="{{profile.avatarUrl}}" mode="aspectFill"></image>
+    <view wx:else class="profile-avatar profile-avatar-fallback">{{profile ? profile.avatarLetter : '我'}}</view>
+    <view class="profile-orbit"></view>
+  </view>
+  <view class="mine-content">
+    <view class="archive-head">
+      <view><text class="archive-title">我的作品</text><text class="archive-count">{{photoList.length}} 张</text></view>
+      <button class="publish-mini" bindtap="goToAdd">发布照片</button>
+    </view>
+    <view class="state-box compact" wx:if="{{loading && !photoList.length}}"><text class="state-title">正在整理作品</text></view>
+    <view class="state-box compact" wx:elif="{{loadError && !photoList.length}}" bindtap="loadMine">
+      <view class="state-mark"></view><text class="state-title">暂时无法加载</text><text class="state-desc">{{loadError}}，点击重试</text>
+    </view>
+    <view class="state-box compact" wx:elif="{{!photoList.length}}">
+      <view class="state-mark"></view><text class="state-title">这里还没有作品</text><text class="state-desc">发布一张照片，建立你的影像档案</text>
+    </view>
+    <view class="mine-grid" wx:else>
+      <view class="mine-work" wx:for="{{photoList}}" wx:key="_id">
+        <navigator class="mine-work-link" url="../detail/detail?id={{item._id}}" hover-class="mine-work-active">
+          <image src="{{item.photoUrl}}" mode="aspectFill" lazy-load="true"></image><view class="work-date">{{item.addDate}}</view>
+        </navigator>
+        <button class="delete-work" data-id="{{item._id}}" catchtap="deletePhoto" loading="{{deletingId === item._id}}" disabled="{{deletingId && deletingId !== item._id}}">删除</button>
+      </view>
+    </view>
+    <button class="logout-button" bindtap="logout">退出登录</button>
+  </view>
+  <view class="edit-mask" wx:if="{{editing}}" bindtap="closeEdit">
+    <view class="edit-sheet" catchtap="noop">
+      <view class="edit-head"><text>编辑个人资料</text><text bindtap="closeEdit">关闭</text></view>
+      <text class="field-label">昵称</text><input value="{{editName}}" maxlength="16" bindinput="onNameInput" placeholder="输入昵称"/>
+      <text class="field-label">个人介绍</text><textarea value="{{editBio}}" maxlength="40" bindinput="onBioInput" placeholder="用一句话介绍自己"></textarea>
+      <button class="primary-button" bindtap="saveProfile" loading="{{profileSaving}}" disabled="{{profileSaving}}">{{profileSaving ? '正在同步' : '保存资料'}}</button>
+    </view>
+  </view>
+  </block>
+</view>

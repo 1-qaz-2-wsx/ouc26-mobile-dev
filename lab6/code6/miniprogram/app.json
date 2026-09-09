@@ -1,0 +1,30 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/mine/mine",
+    "pages/messages/messages",
+    "pages/homepage/homepage",
+    "pages/detail/detail",
+    "pages/add/add"
+  ],
+  "tabBar": {
+    "custom": true,
+    "color": "#718078",
+    "selectedColor": "#246B4B",
+    "backgroundColor": "#FFFDF8",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "社区" },
+      { "pagePath": "pages/mine/mine", "text": "我的" }
+    ]
+  },
+  "window": {
+    "backgroundColor": "#F7F4EE",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#F7F4EE",
+    "navigationBarTitleText": "图片分享社区",
+    "navigationBarTextStyle": "black"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,65 @@
+.mine-page { min-height: 100vh; padding-bottom: 190rpx; background: #f7f4ee; }
+.profile-hero {
+  position: relative; display: flex; min-height: 390rpx; align-items: center;
+  justify-content: space-between; overflow: hidden; padding: 58rpx 46rpx 74rpx;
+  background: #17211b; color: #fffdf8;
+}
+.profile-copy { position: relative; z-index: 2; display: flex; width: 58%; flex-direction: column; }
+.profile-label { color: #d4a94e; font-size: 22rpx; letter-spacing: 3rpx; }
+.profile-name { margin-top: 18rpx; font-family: "Songti SC", serif; font-size: 52rpx; font-weight: 700; }
+.profile-place { margin-top: 14rpx; color: #bfcac2; font-size: 23rpx; line-height: 1.5; }
+.profile-avatar {
+  position: relative; z-index: 2; width: 176rpx; height: 176rpx; border: 6rpx solid #fffdf8;
+  border-radius: 50%; box-shadow: 14rpx 14rpx 0 #246b4b;
+}
+.profile-avatar-fallback {
+  display: flex; align-items: center; justify-content: center; background: #dfe9df;
+  color: #246b4b; font-family: "Songti SC", serif; font-size: 64rpx; font-weight: 700;
+}
+.profile-orbit {
+  position: absolute; right: -80rpx; bottom: -190rpx; width: 420rpx; height: 420rpx;
+  border: 4rpx solid rgba(212, 169, 78, 0.38); border-radius: 50%;
+}
+.profile-action {
+  width: 150rpx; height: 54rpx; margin: 24rpx 0 0; padding: 0; border: 2rpx solid #d4a94e;
+  border-radius: 4rpx 16rpx 4rpx 16rpx; background: transparent; color: #fffdf8;
+  font-size: 22rpx; line-height: 52rpx;
+}
+.mine-content { margin-top: -22rpx; padding: 0 24rpx; }
+.archive-head {
+  position: relative; z-index: 3; display: flex; align-items: center; justify-content: space-between;
+  padding: 30rpx 28rpx; border-radius: 8rpx 28rpx 8rpx 28rpx; background: #fffdf8;
+  box-shadow: 0 12rpx 32rpx rgba(23, 33, 27, 0.1);
+}
+.archive-title { font-family: "Songti SC", serif; font-size: 38rpx; font-weight: 700; }
+.archive-count { margin-left: 16rpx; color: #718078; font-size: 23rpx; }
+.publish-mini {
+  height: 64rpx; margin: 0; padding: 0 24rpx; border-radius: 6rpx 20rpx 6rpx 20rpx;
+  background: #e95a3f; color: #ffffff; font-size: 24rpx; font-weight: 600; line-height: 64rpx;
+}
+.mine-grid { display: flex; margin-top: 30rpx; flex-wrap: wrap; }
+.mine-work { position: relative; width: 33.333%; height: 240rpx; padding: 3rpx; overflow: hidden; }
+.mine-work:nth-child(4n + 1) { height: 290rpx; }
+.mine-work-link { display: block; width: 100%; height: 100%; }
+.mine-work image { width: 100%; height: 100%; border-radius: 16rpx 4rpx 16rpx 4rpx; }
+.work-date {
+  position: absolute; right: 12rpx; bottom: 10rpx; left: 12rpx; color: #ffffff;
+  font-size: 18rpx; text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.7);
+}
+.mine-work-active { opacity: 0.78; }
+.delete-work { position: absolute; right: 12rpx; top: 12rpx; height: 46rpx; margin: 0; padding: 0 14rpx; border-radius: 4rpx 14rpx 4rpx 14rpx; background: rgba(23,33,27,.78); color: #fffdf8; font-size: 20rpx; line-height: 46rpx; }
+.logout-button { height: 76rpx; margin: 42rpx 0 20rpx; border: 2rpx solid rgba(233,90,63,.6); border-radius: 8rpx 22rpx 8rpx 22rpx; background: transparent; color: #e95a3f; font-size: 26rpx; line-height: 72rpx; }
+.logged-out-state { display: flex; min-height: 100vh; align-items: center; justify-content: center; flex-direction: column; padding: 80rpx 48rpx 220rpx; background: #f7f4ee; text-align: center; }
+.logged-out-state .state-desc { margin-top: 16rpx; }
+.login-again { width: 360rpx; margin-top: 42rpx; }
+.compact { min-height: 300rpx; }
+.edit-mask { position:fixed; z-index:200; top:0; right:0; bottom:0; left:0; display:flex; align-items:flex-end; background:rgba(15,22,18,.56); }
+.edit-sheet { width:100%; padding:36rpx 30rpx calc(40rpx + env(safe-area-inset-bottom)); border-radius:36rpx 10rpx 0 0; background:#fffdf8; }
+.edit-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:30rpx; }
+.edit-head text:first-child { font-family:"Songti SC",serif; font-size:38rpx; font-weight:700; }
+.edit-head text:last-child { color:#718078; font-size:24rpx; }
+.field-label { display:block; margin:22rpx 0 10rpx; color:#718078; font-size:22rpx; }
+.edit-sheet input,.edit-sheet textarea { width:100%; padding:20rpx; border:2rpx solid rgba(23,33,27,.12); border-radius:18rpx 5rpx 18rpx 5rpx; background:#f7f4ee; font-size:27rpx; }
+.edit-sheet input { height:76rpx; }
+.edit-sheet textarea { height:140rpx; }
+.edit-sheet .primary-button { margin-top:30rpx; }

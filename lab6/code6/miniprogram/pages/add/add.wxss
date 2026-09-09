@@ -1,0 +1,143 @@
+.add-page {
+  padding-bottom: 80rpx;
+}
+
+.publish-panel {
+  position: relative;
+  margin: 8rpx 0 54rpx 26rpx;
+  padding: 28rpx;
+  border-left: 8rpx solid #d4a94e;
+  border-radius: 6rpx 30rpx 6rpx 30rpx;
+  background: #fffdf8;
+  box-shadow: 0 14rpx 36rpx rgba(23, 33, 27, 0.08);
+}
+
+.profile-line {
+  display: flex;
+  align-items: center;
+  margin-bottom: 28rpx;
+}
+
+.profile-avatar {
+  width: 74rpx;
+  height: 74rpx;
+  margin-right: 18rpx;
+  border-radius: 50%;
+  background: #dfe9df;
+}
+
+.profile-placeholder {
+  border: 4rpx solid #246b4b;
+}
+
+.profile-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.profile-tip {
+  margin-top: 4rpx;
+  color: #718078;
+  font-size: 22rpx;
+}
+
+.caption-input {
+  width: 100%;
+  min-height: 132rpx;
+  padding: 22rpx;
+  border: 2rpx solid rgba(23, 33, 27, 0.12);
+  border-radius: 18rpx 6rpx 18rpx 6rpx;
+  background: #f7f4ee;
+  color: #17211b;
+  font-family: "Songti SC", serif;
+  font-size: 29rpx;
+  line-height: 1.6;
+}
+
+.caption-count {
+  display: block;
+  margin: 10rpx 4rpx 22rpx;
+  color: #8a918d;
+  font-size: 21rpx;
+  text-align: right;
+}
+
+.upload-button {
+  width: 100%;
+  margin: 0;
+}
+
+.upload-button[disabled] {
+  opacity: 0.72;
+}
+
+.progress-track {
+  overflow: hidden;
+  height: 8rpx;
+  margin: 22rpx 4rpx 0;
+  border-radius: 99rpx;
+  background: #e5e0d6;
+}
+
+.progress-value {
+  height: 100%;
+  border-radius: 99rpx;
+  background: #246b4b;
+  transition: width 0.18s ease;
+}
+
+.upload-note {
+  display: block;
+  margin-top: 18rpx;
+  color: #7a817d;
+  font-size: 22rpx;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.history-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 0 10rpx 24rpx;
+}
+
+.history-title {
+  display: block;
+}
+
+.history-title {
+  font-family: "Songti SC", serif;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.history-count {
+  padding-bottom: 4rpx;
+  color: #718078;
+  font-size: 24rpx;
+}
+
+.photoBox {
+  display: flex;
+  overflow: hidden;
+  border-radius: 24rpx 6rpx 24rpx 6rpx;
+  flex-wrap: wrap;
+  background: #17211b;
+}
+
+.history-image {
+  width: 33.3333%;
+  height: 236rpx;
+  border: 2rpx solid #17211b;
+}
+
+.compact {
+  min-height: 220rpx;
+  padding: 40rpx;
+}

@@ -1,0 +1,39 @@
+<view class="container homepage">
+  <view class="avatarBox" wx:if="{{profile}}">
+    <view class="profile-number">{{photoList.length}} 张作品</view>
+    <image wx:if="{{profile.avatarUrl}}" src="{{profile.avatarUrl}}" mode="aspectFill"></image>
+    <view wx:else class="hero-avatar-fallback">{{profile.avatarLetter}}</view>
+    <text class="profile-name">{{profile.displayName}}</text>
+    <text class="profile-location">{{profile.displayLocation}}</text>
+    <button class="follow-button {{following ? 'following' : ''}}" bindtap="toggleFollow">{{following ? '已关注' : '+ 关注'}}</button>
+    <view class="profile-rule"></view>
+  </view>
+
+  <view class="state-box" wx:if="{{loading && !photoList.length}}">
+    <text class="state-title">正在打开影像档案</text>
+  </view>
+  <view class="state-box" wx:elif="{{loadError && !photoList.length}}" bindtap="retryLoad">
+    <view class="state-mark"></view>
+    <text class="state-title">档案暂时无法打开</text>
+    <text class="state-desc">{{loadError}}</text>
+  </view>
+  <view class="state-box" wx:elif="{{!photoList.length}}">
+    <view class="state-mark"></view>
+    <text class="state-title">这里还没有作品</text>
+    <text class="state-desc">作者发布的照片会依次出现在这里</text>
+  </view>
+
+  <view class="works-head" wx:if="{{photoList.length}}">
+    <text class="works-title">作品</text>
+    <text class="works-count">{{photoList.length}}</text>
+  </view>
+  <view class="works-grid" wx:if="{{photoList.length}}">
+    <navigator class="work-item" wx:for="{{photoList}}" wx:key="_id" url="../detail/detail?id={{item._id}}" hover-class="work-item-active">
+      <image src="{{item.photoUrl}}" mode="aspectFill" lazy-load="true"></image>
+      <text wx:if="{{item.caption}}">{{item.caption}}</text>
+    </navigator>
+  </view>
+
+  <view class="list-status" wx:if="{{loadingMore}}">继续翻阅作品…</view>
+  <view class="list-status" wx:if="{{photoList.length && !hasMore}}">全部作品已加载</view>
+</view>

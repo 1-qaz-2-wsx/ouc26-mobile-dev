@@ -1,0 +1,124 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "多功能计算器"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "多功能计算器"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "多功能计算器"
+    },
+    {
+      "name": "error",
+      "value": "错误"
+    },
+    {
+      "name": "homepage_text1",
+      "value": "计算器"
+    },
+    {
+      "name": "app_title",
+      "value": "多功能计算器"
+    },
+    {
+      "name": "app_subtitle",
+      "value": "支持普通计算、科学计算、亲戚称呼换算"
+    },
+    {
+      "name": "function_calculator",
+      "value": "普通计算器"
+    },
+    {
+      "name": "function_scientific",
+      "value": "科学计算器"
+    },
+    {
+      "name": "function_relationship",
+      "value": "亲戚称呼换算"
+    },
+    {
+      "name": "function_base",
+      "value": "进制转换"
+    },
+    {
+      "name": "function_unit",
+      "value": "单位换算"
+    },
+    {
+      "name": "function_currency",
+      "value": "汇率换算"
+    },
+    {
+      "name": "scientific_title",
+      "value": "科学计算器"
+    },
+    {
+      "name": "scientific_subtitle",
+      "value": "支持三角函数、对数、幂运算等"
+    },
+    {
+      "name": "relationship_title",
+      "value": "亲戚称呼换算"
+    },
+    {
+      "name": "relationship_subtitle",
+      "value": "查询亲戚的称呼"
+    },
+    {
+      "name": "relationship_mode_find_title",
+      "value": "查询亲戚的称呼"
+    },
+    {
+      "name": "relationship_mode_find_reverse",
+      "value": "查询亲戚对我的称呼"
+    },
+    {
+      "name": "relationship_mode_find_relation",
+      "value": "根据称呼查询关系"
+    },
+    {
+      "name": "relationship_switch_label",
+      "value": "切换"
+    },
+    {
+      "name": "relationship_gender_label",
+      "value": "我的性别"
+    },
+    {
+      "name": "relationship_gender_male",
+      "value": "男"
+    },
+    {
+      "name": "relationship_gender_female",
+      "value": "女"
+    },
+    {
+      "name": "relationship_label_title",
+      "value": "TA 是您的称呼"
+    },
+    {
+      "name": "relationship_label_reverse",
+      "value": "TA 称呼您"
+    },
+    {
+      "name": "relationship_label_relation",
+      "value": "您与 TA 的关系"
+    },
+    {
+      "name": "base_title",
+      "value": "进制转换"
+    },
+    {
+      "name": "unit_title",
+      "value": "单位换算"
+    },
+    {
+      "name": "currency_title",
+      "value": "汇率换算"
+    }
+  ]
+}

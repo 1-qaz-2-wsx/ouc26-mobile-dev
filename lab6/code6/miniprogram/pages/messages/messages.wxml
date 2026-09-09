@@ -1,0 +1,8 @@
+<view class="container messages-page">
+  <view class="messages-head"><view><text class="section-label">社区互动</text><text class="page-title">消息</text></view><button wx:if="{{unreadCount}}" bindtap="markAllRead">全部已读</button></view>
+  <view class="message-summary"><text>{{unreadCount}}</text><view><text>条未读消息</text><text>点赞、评论与关注动态会汇集在这里</text></view></view>
+  <view class="state-box" wx:if="{{!notifications.length}}"><view class="state-mark"></view><text class="state-title">还没有新消息</text><text class="state-desc">去社区与喜欢的作品互动吧</text></view>
+  <view class="message-list" wx:else>
+    <view class="message-card {{item.read ? '' : 'unread'}}" wx:for="{{notifications}}" wx:key="id"><view class="message-dot"></view><view class="message-copy"><view><text class="message-type">{{item.type}}</text><text class="message-time">{{item.time}}</text></view><text class="message-title">{{item.title}}</text><text class="message-content">{{item.content}}</text></view></view>
+  </view>
+</view>

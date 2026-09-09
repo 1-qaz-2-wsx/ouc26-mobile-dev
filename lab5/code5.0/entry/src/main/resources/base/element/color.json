@@ -1,0 +1,20 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "all_back_color",
+      "value": "#F2F2F7"
+    },
+    {
+      "name": "border_color",
+      "value": "#F5F5F5"
+    },
+    {
+      "name": "equals_back_color",
+      "value": "#007DFF"
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+.homepage {
+  padding-top: 0;
+}
+
+.avatarBox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 -20rpx 34rpx;
+  padding: 84rpx 28rpx 54rpx;
+  flex-direction: column;
+  overflow: hidden;
+  background: #17211b;
+  color: #ffffff;
+}
+
+.avatarBox::after {
+  position: absolute;
+  right: -80rpx;
+  bottom: -130rpx;
+  width: 300rpx;
+  height: 300rpx;
+  border: 4rpx solid rgba(212, 169, 78, 0.46);
+  border-radius: 50%;
+  content: "";
+}
+
+.profile-number {
+  position: absolute;
+  top: 28rpx;
+  right: 30rpx;
+  color: #d4a94e;
+  font-size: 20rpx;
+  letter-spacing: 1rpx;
+}
+
+.avatarBox image,
+.hero-avatar-fallback {
+  width: 190rpx;
+  height: 190rpx;
+  border: 8rpx solid #fffdf8;
+  border-radius: 50%;
+  box-shadow: 18rpx 16rpx 0 #246b4b;
+}
+
+.hero-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dfe9df;
+  color: #246b4b;
+  font-family: "Songti SC", serif;
+  font-size: 70rpx;
+  font-weight: 700;
+}
+
+.profile-name {
+  z-index: 1;
+  margin-top: 34rpx;
+  font-family: "Songti SC", serif;
+  font-size: 46rpx;
+  font-weight: 700;
+}
+
+.profile-location {
+  z-index: 1;
+  margin-top: 10rpx;
+  color: #bfcac2;
+  font-size: 24rpx;
+}
+
+.profile-rule {
+  width: 72rpx;
+  height: 6rpx;
+  margin-top: 24rpx;
+  background: #e95a3f;
+}
+.follow-button { z-index:2; width:164rpx; height:62rpx; margin:22rpx 0 0; padding:0; border-radius:8rpx 20rpx 8rpx 20rpx; background:#e95a3f; color:#fff; font-size:24rpx; line-height:62rpx; }
+.follow-button.following { border:2rpx solid #d4a94e; background:transparent; color:#fffdf8; line-height:58rpx; }
+
+.works-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 38rpx 10rpx 22rpx;
+  border-bottom: 2rpx solid rgba(23, 33, 27, 0.12);
+  padding-bottom: 14rpx;
+}
+
+.works-title {
+  font-family: "Songti SC", serif;
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.works-count {
+  color: #718078;
+  font-size: 23rpx;
+}
+
+.works-grid {
+  display: flex;
+  margin: 0 -4rpx;
+  flex-wrap: wrap;
+}
+
+.work-item {
+  position: relative;
+  width: 33.333%;
+  height: 240rpx;
+  padding: 4rpx;
+  overflow: hidden;
+}
+
+.work-item:nth-child(5n + 1) {
+  height: 300rpx;
+}
+
+.work-item image {
+  width: 100%;
+  height: 100%;
+  border-radius: 18rpx 4rpx 18rpx 4rpx;
+}
+
+.work-item text {
+  position: absolute;
+  right: 12rpx;
+  bottom: 12rpx;
+  left: 12rpx;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 20rpx;
+  text-overflow: ellipsis;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.65);
+  white-space: nowrap;
+}
+
+.work-item-active {
+  opacity: 0.78;
+}

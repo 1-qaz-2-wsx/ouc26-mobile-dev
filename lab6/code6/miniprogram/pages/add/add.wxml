@@ -1,0 +1,62 @@
+<view class="container add-page">
+  <text class="page-title">分享一帧此刻</text>
+
+  <view class="publish-panel">
+    <view class="profile-line" wx:if="{{userInfo}}">
+      <image wx:if="{{userInfo.avatarUrl}}" class="profile-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+      <view wx:else class="profile-avatar profile-placeholder"></view>
+      <view class="profile-copy">
+        <text class="profile-name">{{userInfo.nickName || '微信用户'}}</text>
+      </view>
+    </view>
+
+    <textarea
+      class="caption-input"
+      value="{{caption}}"
+      maxlength="60"
+      placeholder="为照片写一句话（选填）"
+      bindinput="onCaptionInput"
+      auto-height
+    ></textarea>
+    <text class="caption-count">{{captionLength}} / 60</text>
+
+    <button class="danger-button upload-button" bindtap="upload" loading="{{uploading}}" disabled="{{uploading}}">
+      {{uploading ? '正在上传 ' + uploadProgress + '%' : '点击此处上传图片'}}
+    </button>
+
+    <view class="progress-track" wx:if="{{uploading}}">
+      <view class="progress-value" style="width: {{uploadProgress}}%;"></view>
+    </view>
+    <text class="upload-note">支持从相册选择或直接拍摄</text>
+  </view>
+
+  <view class="history-head">
+    <view>
+      <text class="history-title">最近上传</text>
+    </view>
+    <text class="history-count">{{historyPhotos.length}} 张</text>
+  </view>
+
+  <view class="state-box compact" wx:if="{{historyLoading}}">
+    <text class="state-desc">正在整理你的影像档案…</text>
+  </view>
+  <view class="state-box compact" wx:elif="{{historyError}}" bindtap="getHistoryPhotos">
+    <text class="state-title">历史记录暂不可用</text>
+    <text class="state-desc">{{historyError}}，点击重试</text>
+  </view>
+  <view class="state-box compact" wx:elif="{{!historyPhotos.length}}">
+    <text class="state-desc">发布后的照片会出现在这里</text>
+  </view>
+  <view class="photoBox" wx:else>
+    <image
+      wx:for="{{historyPhotos}}"
+      wx:key="_id"
+      class="history-image"
+      src="{{item.photoUrl}}"
+      mode="aspectFill"
+      lazy-load="true"
+      data-url="{{item.photoUrl}}"
+      bindtap="previewHistory"
+    ></image>
+  </view>
+</view>
