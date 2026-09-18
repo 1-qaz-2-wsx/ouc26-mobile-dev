@@ -1,1 +1,1 @@
-{ "usingComponents": { "navigation-bar": "/components/navigation-bar/navigation-bar" }, "disableScroll": true }
+{"navigationBarTitleText":"地点详情","navigationStyle":"default","renderer":"webview","disableScroll":true,"usingComponents":{}}

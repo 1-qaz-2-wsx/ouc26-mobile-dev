@@ -1,0 +1,160 @@
+<!-- G7 · 发布 / 编辑内容（Post edit）
+     表单语法与社区其它三页共用：label / input / textarea / selector / chip / image picker / error。
+     不是 Web 后台表格：所有选择都是移动端胶囊与行式选择器，一屏只有一个实心绿主 CTA。 -->
+<view class="pe-page">
+
+ <view class="pe-head">
+  <text class="pe-head__title">{{editingId ? '编辑内容' : '发布内容'}}</text>
+  <text class="pe-head__meta">{{cloud ? '发布到云端社区' : '本机演示内容'}}</text>
+ </view>
+
+ <view wx:if="{{error}}" class="pe-err">
+  <text class="pe-err__title">还不能提交</text>
+  <text class="pe-err__text">{{error}}</text>
+ </view>
+
+ <view wx:if="{{loading}}" class="pe-card pe-card--skel">
+  <view class="pe-skel pe-skel--label"></view>
+  <view class="pe-skel pe-skel--input"></view>
+  <view class="pe-skel pe-skel--area"></view>
+ </view>
+
+ <block wx:if="{{!loading}}">
+
+  <!-- 类型：三枚 chip，不做下拉后台控件 -->
+  <view class="pe-card">
+   <text class="pe-label">内容类型</text>
+   <view class="pe-chips">
+    <button wx:for="{{labels}}" wx:key="*this" class="pe-chip {{typeIndex === index ? 'pe-chip--on' : ''}}" data-index="{{index}}" bindtap="setType">{{item}}</button>
+   </view>
+   <text class="pe-hint">{{typeHints[typeIndex]}}</text>
+  </view>
+
+  <!-- 标题 -->
+  <view class="pe-card">
+   <text class="pe-label">标题</text>
+   <input class="pe-input" value="{{title}}" data-key="title" bindinput="field" maxlength="60" placeholder="一句话说清这篇内容"/>
+   <text class="pe-count">{{title.length}}/60</text>
+  </view>
+
+  <!-- 关联地点 -->
+  <view class="pe-card">
+   <text class="pe-label">关联地点</text>
+   <text class="pe-hint">{{typeIndex === 1 ? '评价帖必须选择一个已确认地点，最多 12 个。' : '可选：从已确认地点里挑，或在下面手填地名。'}}</text>
+   <picker wx:if="{{typeIndex === 1 && placeOptions.length}}" range="{{placeOptions}}" range-key="name" value="{{placeIndex}}" bindchange="choosePlace">
+    <view class="pe-selector">
+     <text class="pe-selector__label">选择已确认地点</text>
+     <text class="pe-selector__value">{{selectedPlaces.length ? '已选 ' + selectedPlaces.length + ' 个' : '未选择'}}</text>
+     <text class="pe-chev"></text>
+    </view>
+   </picker>
+   <view wx:if="{{selectedPlaces.length}}" class="pe-selected">
+    <view wx:for="{{selectedPlaces}}" wx:key="id" class="pe-selected__item">
+     <text class="pe-selected__name">{{item.name}}</text>
+     <button class="pe-selected__x" data-index="{{index}}" catchtap="removePlace">×</button>
+    </view>
+   </view>
+   <input class="pe-input" value="{{places}}" data-key="places" bindinput="field" placeholder="问题可填写地点名，逗号分隔"/>
+  </view>
+
+  <!-- 正文 -->
+  <view class="pe-card">
+   <text class="pe-label">正文</text>
+   <textarea class="pe-textarea" value="{{content}}" data-key="content" bindinput="field" maxlength="5000" placeholder="行程、体验或你想问的问题…"/>
+   <text class="pe-count">{{content.length}}/5000</text>
+  </view>
+
+  <!-- 类型专属字段 -->
+  <view wx:if="{{typeIndex === 0}}" class="pe-card">
+   <text class="pe-label">附带方案</text>
+   <picker range="{{plans}}" range-key="name" value="{{planIndex}}" bindchange="plan">
+    <view class="pe-selector">
+     <text class="pe-selector__label">选择方案</text>
+     <text class="pe-selector__value">{{plans[planIndex].name || '暂无方案，请先生成后再发布'}}</text>
+     <text class="pe-chev"></text>
+    </view>
+   </picker>
+   <text class="pe-hint">路线帖需要一个已保存方案；没有方案时请先生成方案或完成一次行程。</text>
+  </view>
+
+  <view wx:if="{{typeIndex === 1}}" class="pe-card">
+   <text class="pe-label">推荐程度</text>
+   <view class="pe-chips">
+    <button wx:for="{{ratingOptions}}" wx:key="*this" class="pe-chip {{rating == item ? 'pe-chip--on' : ''}}" data-rating="{{item}}" bindtap="setRating">{{item}} 分</button>
+   </view>
+   <text class="pe-label pe-label--gap">旅行日期（必填）</text>
+   <picker mode="date" value="{{visitDate}}" bindchange="date">
+    <view class="pe-selector">
+     <text class="pe-selector__label">游玩日期</text>
+     <text class="pe-selector__value {{visitDate ? '' : 'pe-selector__value--empty'}}">{{visitDate || '请选择日期'}}</text>
+     <text class="pe-chev"></text>
+    </view>
+   </picker>
+   <text class="pe-label pe-label--gap">建议游玩时间</text>
+   <input class="pe-input" value="{{duration}}" data-key="duration" bindinput="field" placeholder="例如 3 小时 / 半天"/>
+  </view>
+
+  <!-- 图片 -->
+  <view class="pe-card">
+   <text class="pe-label">图片</text>
+   <text class="pe-hint">最多 6 张；单张 ≤ 10 MB，支持 JPG / PNG / WebP。</text>
+   <view class="pe-photos">
+    <view wx:for="{{photos}}" wx:key="path" class="pe-photo">
+     <image class="pe-photo__img" src="{{item.path || item}}" mode="aspectFill"/>
+     <button class="pe-photo__x" data-index="{{index}}" catchtap="removePhoto">×</button>
+    </view>
+    <button wx:if="{{photos.length < 6}}" class="pe-photo pe-photo--add" bindtap="photo">
+     <text class="pe-photo__plus">＋</text>
+     <text class="pe-photo__count">{{photos.length}}/6</text>
+    </button>
+   </view>
+  </view>
+
+  <!-- 可见范围：两种取值，public / private -->
+  <view class="pe-card">
+   <text class="pe-label">谁能看到</text>
+   <button class="pe-opt {{public ? 'pe-opt--on' : ''}}" data-public="true" bindtap="setVisibility">
+    <view class="pe-opt__copy">
+     <text class="pe-opt__title">公开</text>
+     <text class="pe-opt__text">出现在社区，其他人可以点赞、收藏和评论。</text>
+    </view>
+    <text class="pe-radio"></text>
+   </button>
+   <button class="pe-opt {{!public ? 'pe-opt--on' : ''}}" data-public="false" bindtap="setVisibility">
+    <view class="pe-opt__copy">
+     <text class="pe-opt__title">仅自己可见</text>
+     <text class="pe-opt__text">不会出现在社区，你自己仍可查看并随时改回公开。</text>
+    </view>
+    <text class="pe-radio"></text>
+   </button>
+   <view class="pe-note">{{cloud ? '当前审核功能暂缓；公开内容提交后即可出现在社区。' : '当前为本机演示内容，草稿仅保存在本机。'}}</view>
+   <view wx:if="{{draftSavedAt}}" class="pe-note pe-note--quiet">草稿已按当前账号保存</view>
+  </view>
+
+  <!-- 发布前预览：与社区卡片同构，避免「预览和发出来不一样」 -->
+  <view wx:if="{{preview}}" class="pe-card pe-preview">
+   <text class="pe-label">发布前预览</text>
+   <view class="pe-preview__post">
+    <view class="pe-preview__head">
+     <text class="pe-preview__author">{{editingId ? '（编辑后）' : ''}}{{cloud ? '你的微信账号' : '本机演示用户'}}</text>
+     <text class="pe-preview__vis">{{public ? '公开' : '仅自己可见'}}</text>
+    </view>
+    <text class="pe-preview__title">{{title || '未填写标题'}}</text>
+    <text class="pe-preview__meta">{{labels[typeIndex]}}{{places ? ' · ' + places : ''}}</text>
+    <text class="pe-preview__content">{{content || '未填写正文'}}</text>
+    <image wx:if="{{photos.length}}" class="pe-preview__cover" src="{{photos[0].path || photos[0]}}" mode="aspectFill"/>
+   </view>
+  </view>
+
+  <!-- 操作：预览 / 返回为次要动作，实心绿只给发布 -->
+  <view class="pe-actions">
+   <view class="pe-actions__row">
+    <button class="pe-btn pe-btn--quiet" bindtap="cancel">返回（保留草稿）</button>
+    <button class="pe-btn pe-btn--quiet" bindtap="togglePreview">{{preview ? '收起预览' : '预览'}}</button>
+   </view>
+   <button class="pe-btn pe-btn--primary pe-btn--block" loading="{{busy}}" aria-disabled="{{busy}}" bindtap="publish">{{editingId ? '保存修改' : '发布'}}</button>
+  </view>
+
+ </block>
+
+</view>

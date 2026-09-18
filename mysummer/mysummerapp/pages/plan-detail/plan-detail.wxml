@@ -1,0 +1,129 @@
+<!-- 旅行方案（2026-09-18 Owner 定稿版）
+     版面：页面标题 → 方案条件（出发与规模 / 预算·预计花费）→ 路线地图 → 按天时间轴 → 底部「重新生成 / 开启旅程」。
+     真实方案的用户可见语义只来自 result.display（display-contract.md §8）：
+     页面绑定字段全部由 pages/plan-detail/plan-detail.js 的展示投影产出，
+     不渲染 plan.validation / costSummary / routeAudit 的内部文本，也不渲染任何状态角标。
+     样式见 plan-detail.wxss，类名统一 pd- 前缀；本页不再 import styles/mvp.wxss。 -->
+<view class="pd-page">
+  <view class="pd-err" wx:if="{{error}}">{{error}}</view>
+
+  <block wx:if="{{ready}}">
+    <view class="pd-head">
+      <text class="pd-title">旅行方案 · 已生成</text>
+    </view>
+
+    <!-- ===== 方案条件 ===== -->
+    <view class="pd-card pd-cond">
+      <view class="pd-cond-row">
+        <view class="pd-cond-ico"><view class="pd-glyph pd-glyph-cal"></view></view>
+        <text class="pd-cond-lb">出发与规模</text>
+        <text class="pd-cond-v">{{scale || '待确认'}}</text>
+      </view>
+      <view class="pd-cond-row">
+        <view class="pd-cond-ico"><view class="pd-glyph pd-glyph-money"></view></view>
+        <text class="pd-cond-lb">预算 / 预计花费</text>
+        <text class="pd-cond-v">{{cost || '待查询'}}</text>
+      </view>
+    </view>
+
+    <!-- 只有后端判定 blocked 时才提示（Owner 决定：不拦开启，只提示） -->
+    <view wx:if="{{pageBlocked}}" class="pd-blocked">{{pageBlocked}}</view>
+
+    <!-- ===== 路线示意 ===== -->
+    <map
+      wx:if="{{map && !mapFailed}}"
+      class="pd-map"
+      latitude="{{map.latitude}}"
+      longitude="{{map.longitude}}"
+      scale="{{map.scale}}"
+      markers="{{map.markers}}"
+      polyline="{{map.polyline}}"
+      include-points="{{map.includePoints}}"
+      bindmarkertap="marker"
+      bindcallouttap="marker"
+      binderror="mapError"
+    />
+    <view wx:else class="pd-map pd-map-off">路线地图暂不可用，下面的安排仍可查看。</view>
+
+    <!-- ===== 按天日程 ===== -->
+    <view wx:for="{{days}}" wx:key="key" class="pd-day">
+      <view class="pd-day-rail"></view>
+      <view class="pd-day-dot"></view>
+      <view class="pd-day-hd">
+        <text class="pd-day-t">{{item.label}}</text>
+        <text wx:if="{{item.date}}" class="pd-day-d">{{item.date}}</text>
+      </view>
+
+      <view
+        wx:for="{{item.rows}}"
+        wx:for-item="row"
+        wx:key="id"
+        id="{{row.domId}}"
+        class="pd-card pd-card-{{row.kind}} {{selected === row.id ? 'pd-card-on' : ''}}"
+      >
+        <view class="pd-card-dot"></view>
+        <text class="pd-row-t">{{row.title}}</text>
+        <text wx:if="{{row.line2}}" class="pd-row-l2">{{row.line2}}</text>
+        <text wx:if="{{row.line3}}" class="pd-row-l3">{{row.line3}}</text>
+        <text wx:if="{{row.blockedText}}" class="pd-row-blocked">{{row.blockedText}}</text>
+
+        <view class="pd-row-ft">
+          <button
+            wx:if="{{row.hasDetail}}"
+            class="pd-more"
+            data-id="{{row.id}}"
+            bindtap="toggle"
+            hover-class="hv-flat"
+          >{{expanded[row.id] ? '收起详情' : '展开详情'}}</button>
+          <view wx:else class="pd-more pd-more-off"></view>
+          <button
+            wx:if="{{row.supplementable}}"
+            class="pd-sup {{row.supplemented ? 'pd-sup-on' : ''}}"
+            data-section="{{row.sectionId}}"
+            bindtap="supplement"
+            hover-class="hv-flat"
+          >{{row.supplemented ? '✓ 已补充' : '＋ 补充信息'}}</button>
+        </view>
+
+        <view wx:if="{{expanded[row.id]}}" class="pd-detail">
+          <view wx:for="{{row.facts}}" wx:for-item="f" wx:key="label" class="pd-kv">
+            <text class="pd-kv-l">{{f.label}}</text>
+            <text class="pd-kv-v">{{f.value}}</text>
+          </view>
+          <view wx:if="{{row.options.length}}" class="pd-opts">
+            <text class="pd-opts-t">附近可参考的住宿地点</text>
+            <text class="pd-opts-x">以下只是地图检索到的地点候选：房价、库存与可订性未查询。</text>
+            <view wx:for="{{row.options}}" wx:for-item="o" wx:key="id" class="pd-opt">
+              <text class="pd-opt-n">{{o.name}}</text>
+              <text wx:if="{{o.meta}}" class="pd-opt-m">{{o.meta}}</text>
+            </view>
+          </view>
+          <text wx:for="{{row.actions}}" wx:for-item="a" wx:key="*this" class="pd-action">下一步：{{a}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{item.noActivities}}" class="pd-none">本日活动尚未落实，可回菜单调整地点后重新生成。</view>
+    </view>
+
+    <view wx:if="{{!entryCount}}" class="pd-empty">
+      <text class="pd-empty-t">暂无已落实的日程</text>
+      <text class="pd-empty-p">可以点「重新生成」回菜单调整地点与要求。</text>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="pd-empty">
+      <text class="pd-empty-t">还没有方案</text>
+      <text class="pd-empty-p">{{error || '先在菜单里选好地点与要求，点「生成方案」后回到这里。'}}</text>
+    </view>
+  </block>
+</view>
+
+<!-- ===== 底部固定操作：重新生成 + 开启旅程 ===== -->
+<view class="pd-bar" wx:if="{{ready}}">
+  <view class="pd-bar-row">
+    <button class="pd-btn-sec" bindtap="regenerate" hover-class="hv-flat">重新生成</button>
+    <button class="pd-btn" loading="{{busy}}" disabled="{{busy}}" bindtap="start" hover-class="hv-dark">开启旅程</button>
+  </view>
+  <text class="pd-bar-note">开启旅程后可在行程页记录见闻与照片；本页不收款、不出票、不代订。</text>
+</view>

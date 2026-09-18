@@ -1,0 +1,238 @@
+<view class="menu-page">
+  <!-- 页头：仅步骤 1 有（p06）；p07/p08 画布无页头 -->
+  <view wx:if="{{step === 1}}" class="mhead">
+    <text class="mhead-t">地点清单</text>
+    <text class="mhead-x mnum">第 1 步 / 共 3 步</text>
+  </view>
+
+  <!-- 连续分段步骤条：已完成段与当前段同为实心品牌绿，未开始段为 sunken。
+       ⚠️ 不使用 disabled 属性：微信内置的 button[disabled]:not([type]) 特异度为 (0,2,1)，
+       会盖掉当前步的品牌绿底色，使进度条看起来「落后一个阶段」（G3-R1 反馈的真实原因）。
+       不可回退的段落由 goStep 的 target >= step 早退负责，这里只用 aria-disabled 表达语义。 -->
+  <view class="msteps" aria-label="规划进度">
+    <button
+      wx:for="{{steps}}"
+      wx:key="step"
+      class="mstep {{item.done || item.current ? 'mstep-on' : ''}} {{item.error ? 'mstep-err' : ''}}"
+      data-step="{{item.step}}"
+      bindtap="goStep"
+      aria-disabled="{{!item.done}}"
+      hover-class="{{item.done ? 'hv-step' : 'none'}}"
+      aria-label="第{{item.step}}步{{item.label}}{{item.current ? '，当前' : item.done ? '，已完成' : '，待开始'}}">
+      <text class="mstep-t">{{item.step}} {{item.label}}</text>
+    </button>
+  </view>
+
+  <view wx:if="{{error}}" class="merr" role="alert">{{error}}</view>
+
+  <!-- ============ 步骤 1 · 地点清单（p06） ============ -->
+  <block wx:if="{{step === 1}}">
+    <view class="msec">
+      <text class="msec-t">想去哪里</text>
+      <text wx:if="{{menu.length}}" class="msec-x mnum">{{menu.length}} / 12</text>
+    </view>
+    <text wx:if="{{menu.length > 1}}" class="msub mnum">共 {{totalDays}} 天 · 长按 ☰ 拖动可调整游玩顺序</text>
+    <text wx:if="{{draggingIndex >= 0}}" class="mdrag-hint">松开即可调整顺序</text>
+    <view wx:if="{{errors.stops}}" class="merr" role="alert">{{errors.stops}}</view>
+
+    <view id="menu-list" wx:if="{{menu.length}}" class="mlist">
+      <view
+        wx:for="{{menu}}"
+        wx:key="id"
+        class="destination-card {{draggingIndex === index ? 'mdragging' : ''}} {{dragOverIndex === index ? 'mdroptarget' : ''}}">
+        <view class="mcard-hd-row">
+          <view
+            class="drag-handle"
+            data-index="{{index}}"
+            bindlongpress="dragStart"
+            catchtouchmove="dragMove"
+            bindtouchend="dragEnd"
+            bindtouchcancel="dragCancel"
+            hover-class="none"
+            aria-label="长按拖动{{item.name}}排序">
+            <view class="mgrip"></view><view class="mgrip"></view><view class="mgrip"></view>
+          </view>
+          <view class="morder mnum">{{index + 1}}</view>
+          <view class="mcopy">
+            <text class="mname">{{item.name}}</text>
+            <text class="mmeta">{{item.planningRole === 'destination_area' ? '城市目的地' : item.category || '具体地点'}}<text wx:if="{{item.city && item.city !== item.name}}"> · {{item.city}}</text></text>
+          </view>
+          <button class="mbtn-sm mbtn-danger" data-id="{{item.id}}" bindtap="remove" hover-class="hv-del" aria-label="{{item.name}}删除地点">删除</button>
+        </view>
+
+        <view class="mstay">
+          <text class="mstay-lb">停留天数</text>
+          <view class="mstepper">
+            <button class="mstepper-b" data-id="{{item.id}}" data-delta="-1" bindtap="adjustStay" disabled="{{item.stayDays <= 1}}" hover-class="hv-flat" aria-label="减少{{item.name}}停留天数">−</button>
+            <input class="mstepper-v mnum" type="number" value="{{item.stayDays}}" data-id="{{item.id}}" data-field="stayDays" bindblur="editStop" cursor-spacing="24" aria-label="{{item.name}}停留天数" />
+            <text class="mstepper-u">天</text>
+            <button class="mstepper-b" data-id="{{item.id}}" data-delta="1" bindtap="adjustStay" disabled="{{item.stayDays >= 30}}" hover-class="hv-flat" aria-label="增加{{item.name}}停留天数">＋</button>
+          </view>
+        </view>
+
+        <input class="mnote" value="{{item.note}}" data-id="{{item.id}}" data-field="note" bindblur="editStop" placeholder="添加备注（例如：想看日出、住宿需要靠近车站）" cursor-spacing="24" aria-label="{{item.name}}备注" />
+      </view>
+    </view>
+
+    <view wx:else class="mempty">
+      <view class="mempty-ico"><text>＋</text></view>
+      <text class="mempty-t">还没有想去的地点</text>
+      <text class="mempty-p">先去地图选一个城市、景点或酒店</text>
+      <button class="mbtn mbtn-block" bindtap="add" hover-class="hv-dark">去地图选地点</button>
+      <text class="mempty-n">地图仍可使用“示例地点”快速演示</text>
+    </view>
+
+    <view wx:if="{{menu.length}}" class="msecondary">
+      <button class="mbtn-sm mbtn-ghost" bindtap="clear" hover-class="hv-ghost">清空全部地点</button>
+    </view>
+
+    <view class="mbar">
+      <button class="mbtn mbtn-sec" bindtap="add" hover-class="hv-sec">继续选点</button>
+      <button class="mbtn" bindtap="next" disabled="{{!stepOneReady}}" hover-class="hv-dark">下一步：设置要求</button>
+    </view>
+  </block>
+
+  <!-- ============ 步骤 2 · 出行要求（p07） ============ -->
+  <block wx:if="{{step === 2}}">
+    <view class="mcard">
+      <view id="field-startDate" class="mkv">
+        <text class="mkv-lb">出发日期</text>
+        <picker mode="date" value="{{req.startDate}}" bindchange="datePick">
+          <view class="mvpill"><view class="mcal"></view><text class="mnum">{{req.startDate || '请选择'}}</text></view>
+        </picker>
+      </view>
+      <text wx:if="{{errors.startDate}}" class="mfield-err">{{errors.startDate}}</text>
+
+      <view class="mkv">
+        <text class="mkv-lb">返回日期</text>
+        <view class="mvpill"><view class="mcal"></view><text class="mnum">{{returnDate || '待推算'}}</text></view>
+      </view>
+      <text class="mhint">按出发日期与总天数推算，不可单独修改。</text>
+
+      <!-- 总天数：画布为右侧绿字（无框）。仍保留真实可编辑输入（round-03 §2.2），
+           只是把输入框做成与画布一致的行内绿字，不再是一个加框控件。 -->
+      <view id="field-days" class="mkv">
+        <text class="mkv-lb">总天数</text>
+        <view class="mkv-grp"><input class="mkv-inp mnum" type="number" value="{{req.days}}" data-field="days" bindinput="field" bindblur="fieldBlur" placeholder="1–30" cursor-spacing="24" aria-label="总天数" /><text class="mkv-u">天</text></view>
+      </view>
+      <text wx:if="{{errors.days}}" class="mfield-err">{{errors.days}}</text>
+
+      <!-- 人数：画布 p07 未画，但后端 travelers.adults 必填，属「已实现功能不得删」，
+           按画布同一行式降级为次级行，不占用主操作位。 -->
+      <view id="field-people" class="mkv">
+        <text class="mkv-lb">人数</text>
+        <view class="mvpill"><input class="mvpill-inp mnum" type="number" value="{{req.people}}" data-field="people" bindinput="field" bindblur="fieldBlur" placeholder="1–20" cursor-spacing="24" aria-label="出行人数" /><text class="mvpill-suf">人</text></view>
+      </view>
+      <text wx:if="{{errors.people}}" class="mfield-err">{{errors.people}}</text>
+
+      <view id="field-budget" class="mfield">
+        <view class="mkv">
+          <text class="mkv-lb">预算</text>
+          <view class="mvpill"><text class="mvpill-pre">¥</text><input class="mvpill-inp mnum" type="digit" value="{{req.budget}}" data-field="budget" bindinput="field" bindblur="fieldBlur" placeholder="金额" cursor-spacing="24" aria-label="预算金额" /></view>
+        </view>
+        <slider
+          class="mslider"
+          min="3000"
+          max="30000"
+          step="500"
+          value="{{req.budget}}"
+          activeColor="#00754A"
+          backgroundColor="#E5E5E5"
+          block-color="#FFFFFF"
+          block-size="18"
+          bindchange="budgetSlide"
+          aria-label="预算快速调节" />
+        <view class="mslider-ends mnum"><text>¥3,000</text><text>¥30,000</text></view>
+        <view class="mtypes">
+          <text class="mtypes-lb">预算口径</text>
+          <button
+            wx:for="{{budgetTypes}}"
+            wx:key="*this"
+            class="mtype {{req.budgetType === item ? 'mtype-on' : ''}}"
+            data-value="{{item}}"
+            bindtap="budgetType"
+            hover-class="hv-flat"
+            aria-label="预算口径{{item}}">{{item}}</button>
+        </view>
+        <text wx:if="{{errors.budget}}" class="mfield-err">{{errors.budget}}</text>
+      </view>
+
+      <view class="mdiv mdiv-inset"></view>
+
+      <view id="field-origin" class="mrow-link" bindtap="chooseEndpoint" data-field="originPlace" hover-class="hv-flat" aria-label="更换出发城市">
+        <view class="mico"><view class="mpin"></view></view>
+        <view class="mcopy">
+          <text class="mname">{{req.origin}}</text>
+          <text class="mmeta">点击更换出发城市</text>
+        </view>
+        <view class="mchev"></view>
+      </view>
+    </view>
+
+    <view class="mcard">
+      <view id="field-modes" class="mfield">
+        <text class="mfield-lb">接受的交通方式</text>
+        <checkbox-group class="mchip-row" bindchange="modes">
+          <label wx:for="{{modeChoices}}" wx:key="name" class="mchip {{item.checked ? 'mchip-on' : ''}}">
+            <checkbox value="{{item.name}}" checked="{{item.checked}}" />
+            <!-- 图标键由 menu.js 的 MODE_ICONS 给出（PDF p07 每个 chip 都带线性图标） -->
+            <view class="mchip-ico mchip-ico-{{item.icon}}"></view>
+            <text>{{item.name}}</text>
+          </label>
+        </checkbox-group>
+        <text wx:if="{{errors.modes}}" class="mfield-err">{{errors.modes}}</text>
+      </view>
+
+      <view class="mdiv mdiv-inset"></view>
+
+      <view id="field-needHotel" class="mswitch">
+        <text class="mfield-lb">需要酒店</text>
+        <switch checked="{{req.needHotel}}" color="#00754A" data-field="needHotel" bindchange="toggle" aria-label="是否需要酒店" />
+      </view>
+
+      <view wx:if="{{req.needHotel}}" id="field-hotelLevel" class="mfield">
+        <picker range="{{levels}}" data-field="hotelLevel" data-options="levels" bindchange="pick">
+          <view class="mrow-link">
+            <view class="mcopy">
+              <text class="mmeta">住宿等级</text>
+              <text class="mname">{{req.hotelLevel}}型酒店</text>
+            </view>
+            <view class="mchev"></view>
+          </view>
+        </picker>
+        <text wx:if="{{errors.hotelLevel}}" class="mfield-err">{{errors.hotelLevel}}</text>
+      </view>
+    </view>
+
+    <!-- 结束城市不是「规划参数」，是行程另一端的目的地，因此保留在主流程里。
+         出发城市按 Owner 2026-09-18 决议改走独立的 pages/origin-city。 -->
+    <view class="mcard">
+      <view class="mfield">
+        <text class="mfield-lb">结束城市</text>
+        <view class="mrow-link" bindtap="chooseEndpoint" data-field="endPlace" hover-class="hv-flat" aria-label="选择结束地">
+          <view class="mcopy">
+            <text class="mname">{{req.endPlace.name || req.originPlace.name || '默认返回出发地'}}</text>
+            <text class="mmeta">点击选择结束地</text>
+          </view>
+          <view class="mchev"></view>
+        </view>
+        <text class="mhint">方案默认返回已确认的出发地；单程旅行请明确选择结束地。</text>
+      </view>
+    </view>
+
+    <!-- 数据源真实状态：原第 3 步压缩成这里的一行小字；拿不到状态时不显示，不假装可用。 -->
+    <text wx:if="{{capabilityState === 'ready' && capabilitySummary}}" class="mhint">数据源：{{capabilitySummary}}</text>
+    <text wx:elif="{{capabilityState === 'loading'}}" class="mhint">正在确认各数据源可用状态…</text>
+
+    <!-- 生成中状态与取消入口常显：生成期间用户必须能看到进度并取消。 -->
+    <view wx:if="{{busy}}" class="mtip mtip-grey" aria-live="polite">正在生成方案，查询期间请保持本页开启；完成后会直接进入方案页。</view>
+    <button wx:if="{{busy && jobId}}" class="mbtn mbtn-sec" bindtap="cancelReal" hover-class="hv-sec">取消本次任务</button>
+
+    <!-- 第 2 步底部：返回地点（次）+ 生成方案（主，唯一一次点击）。未登录时主按钮换成「去登录」。 -->
+    <view class="mbar">
+      <button class="mbtn mbtn-sec" bindtap="backToPlaces" hover-class="hv-sec">返回地点</button>
+      <button wx:if="{{!loginHint}}" class="mbtn" loading="{{busy}}" disabled="{{busy}}" bindtap="generate" hover-class="hv-dark">{{busy ? '正在生成…' : '生成方案'}}</button>
+      <button wx:else class="mbtn" bindtap="login" hover-class="hv-dark">去登录</button>
+    </view>
+  </block>
+</view>

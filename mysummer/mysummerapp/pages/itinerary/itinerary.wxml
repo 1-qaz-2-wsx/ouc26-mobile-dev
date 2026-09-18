@@ -1,25 +1,127 @@
-<navigation-bar title="行程" back="{{false}}" color="#20372f" background="#fffdf7"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
-  <view class="page-shell">
-    <view class="page-intro"><text class="intro-kicker">18 DAYS · SOUTH TO NORTH</text><text class="intro-title">跟着时间轴走完整趟旅行</text><text class="intro-copy">日期、班次和真实费用将在整理原始票据后逐项补齐。</text></view>
-    <view class="timeline">
-      <view class="day-block" wx:for="{{days}}" wx:key="id" wx:for-index="dayIndex">
-        <view class="day-head" data-index="{{dayIndex}}" bindtap="toggleDay">
-          <view class="day-dot"></view>
-          <view class="day-heading"><text class="day-number">DAY {{item.day}}</text><text class="day-title">{{item.title}}</text><text class="day-date">{{item.dateText}}</text></view>
-          <text class="day-toggle">{{item.expanded ? '收起' : '展开'}}</text>
+<!-- 我的行程
+     结构：左侧日期轴（点选切换） + 右侧内容列（多旅行切换 → 当天记录卡 → 收尾）
+     视觉真值：specs/frontend-refactor/design-system-contract.md（G0 令牌 + 组件语法）
+     本页不 import styles/mvp.wxss；类名统一 itn- 前缀。 -->
+<view class="itn-page">
+  <view class="itn-err">{{error}}</view>
+
+  <!-- ============ 空态：还没有任何行程 ============ -->
+  <view wx:if="{{!trips.length}}" class="itn-empty">
+    <view class="itn-empty-ico"></view>
+    <view class="itn-empty-title">还没有进行中的行程</view>
+    <view class="itn-empty-sub">在方案页开启旅程后，这里显示今天的安排与逐项记录</view>
+    <button class="itn-cta" bindtap="start">去规划</button>
+  </view>
+
+  <block wx:else>
+    <view class="itn-body">
+      <!-- ============ 左：日期轴 ============ -->
+      <view class="itn-ax">
+        <view class="itn-ax-rail"></view>
+        <view
+          wx:for="{{days}}"
+          wx:key="key"
+          class="itn-ax-day {{item.key === dayKey ? 'on' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="pickDay"
+        >
+          <view class="itn-ax-mark"><view class="itn-ax-dot"></view></view>
+          <view class="itn-ax-date itn-num">{{item.label}}</view>
+          <view wx:if="{{item.isToday}}" class="itn-ax-today">今天</view>
         </view>
-        <view wx:if="{{item.expanded}}" class="day-content">
-          <view wx:if="{{!item.places.length && !item.segments.length}}" class="empty-day">{{item.summary}}</view>
-          <view class="place-node card" wx:for="{{item.places}}" wx:key="id" wx:for-item="place" data-id="{{place.id}}" bindtap="openPlace">
-            <view><text class="node-type">地点</text><text class="node-name">{{place.name}}</text><text class="node-copy">{{place.summary}}</text></view><text class="node-arrow">›</text>
+      </view>
+
+      <!-- ============ 右：内容列 ============ -->
+      <view class="itn-tl">
+        <!-- 多旅行切换 -->
+        <view class="itn-trips">
+          <view
+            wx:for="{{chips}}"
+            wx:key="id"
+            class="itn-chip {{item.id === trip.id ? 'on' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="choose"
+          >{{item.label}}</view>
+        </view>
+
+        <!-- 当天记录卡：Day n · 时间 + 状态 + 类型 · 标题 + 记录 + 照片 + 动作 -->
+        <view wx:for="{{dayItems}}" wx:key="id" class="itn-card">
+          <view class="itn-item-hd">
+            <view class="itn-item-meta itn-num">Day {{dayNo}} · {{item.time}}</view>
+            <view class="itn-tag {{item.done ? 'ok' : 'grey'}}">{{item.flag}}</view>
           </view>
-          <view class="segment-node" wx:for="{{item.segments}}" wx:key="id" wx:for-item="segment" data-id="{{segment.id}}" bindtap="openSegment">
-            <view class="transport-badge">{{segment.transportType}}</view>
-            <view class="segment-main"><text class="segment-title">{{segment.fromPlace.name}} → {{segment.toPlace.name}}</text><text class="segment-meta">{{segment.durationText}} · {{segment.costText}} <text wx:if="{{segment.crossDay}}">· 跨夜</text></text></view><text>›</text>
+          <view class="itn-item-title">{{item.typeName}} · {{item.title}}</view>
+          <view wx:if="{{item.stay}}" class="itn-item-note itn-num">{{item.stay}}</view>
+          <view wx:if="{{item.meta}}" class="itn-item-note">{{item.meta}}</view>
+          <view wx:if="{{item.bookingLine}}" class="itn-item-note">{{item.bookingLine}}</view>
+          <view wx:if="{{item.note}}" class="itn-item-note">{{item.note}}</view>
+          <view wx:if="{{item.photos.length}}" class="itn-item-photos">
+            <image wx:for="{{item.photos}}" wx:for-item="pic" wx:key="*this" src="{{pic}}" mode="aspectFill"></image>
+          </view>
+          <view class="itn-acts itn-acts-item">
+            <button
+              class="itn-act {{item.done ? 'outline' : 'tint'}}"
+              data-id="{{item.id}}"
+              bindtap="record"
+            >{{item.done ? '编辑记录' : '记录这一刻'}}</button>
+            <button
+              wx:if="{{item.supplementable}}"
+              class="itn-act {{item.supplemented ? 'outline' : 'tint'}}"
+              data-section="{{item.sectionId}}"
+              bindtap="supplement"
+            >{{item.supplemented ? '✓ 已补充' : '＋ 补充信息'}}</button>
+          </view>
+        </view>
+
+        <!-- 当天无安排 -->
+        <view wx:if="{{!dayItems.length}}" class="itn-card itn-none">当天暂无安排，可回到方案里补充地点。</view>
+
+        <!-- 收尾：进行中可结束旅程；已结束的行程显示公开开关 -->
+        <button wx:if="{{trip.status === 'active'}}" class="itn-end" bindtap="complete">结束旅程</button>
+        <view wx:else class="itn-card">
+          <view class="itn-hd">
+            <view class="itn-hd-title">行程公开</view>
+            <view class="itn-tag {{trip.visibility === 'public' ? 'ok' : 'grey'}}">{{trip.visibility === 'public' ? '已开放' : '已隐藏'}}</view>
+          </view>
+          <view class="itn-body-text">开放后可在本机社区预览中展示行程、评价与照片；如需发布到云端社区，请使用社区发布入口。</view>
+          <view class="itn-acts">
+            <button class="itn-act outline" bindtap="visibility">{{trip.visibility === 'public' ? '隐藏行程' : '开放行程'}}</button>
           </view>
         </view>
       </view>
     </view>
+  </block>
+
+  <!-- ============ 行程记录（页面内全屏态；13 页冻结，不新增路由） ============ -->
+  <view wx:if="{{recordId}}" class="itn-rec">
+    <view class="itn-rec-hd">
+      <text class="itn-rec-eyebrow itn-num">{{recordMeta}}</text>
+      <text class="itn-rec-title">{{recordTitle}}</text>
+    </view>
+
+    <view class="itn-rec-card">
+      <text class="itn-rec-lb">旅行记录</text>
+      <textarea
+        class="itn-rec-area"
+        value="{{note}}"
+        maxlength="-1"
+        bindinput="note"
+        placeholder="写下此刻的见闻与评价"
+      ></textarea>
+
+      <view class="itn-rec-photos">
+        <view wx:for="{{photos}}" wx:key="*this" class="itn-rec-photo">
+          <image src="{{item}}" mode="aspectFill"></image>
+          <view class="itn-rec-del" data-index="{{index}}" bindtap="removePhoto"></view>
+        </view>
+        <view wx:if="{{photos.length < 6}}" class="itn-rec-add" bindtap="photo"></view>
+      </view>
+      <text class="itn-rec-tip">最多 6 张照片；未登录时记录只保存在本机。</text>
+    </view>
+
+    <view class="itn-rec-foot">
+      <button class="itn-cancel" bindtap="cancel">取消</button>
+      <button class="itn-save" aria-disabled="{{busy}}" bindtap="saveRecord">保存记录</button>
+    </view>
   </view>
-</scroll-view>
+</view>

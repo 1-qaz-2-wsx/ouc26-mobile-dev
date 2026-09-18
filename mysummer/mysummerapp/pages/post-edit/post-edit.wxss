@@ -1,0 +1,305 @@
+/* ==========================================================================
+   G7 · Community UI v1 —— 发布 / 编辑内容（本页前缀 pe-）
+   共享规格见 pages/community/community.wxss 顶部注释（四页一致，不新造主题）。
+   ⚠️ 本页已完全移除对 legacy 基线 styles/mvp.wxss 的 @import，表单/按钮默认值需自行复位。
+   表单语法：label / input / textarea / selector / chip / image picker / error，
+   全部按移动端手感落地，不做 Web 后台式表格。
+   ========================================================================== */
+
+page {
+  background: #f1f2ed;
+  color: #141414;
+}
+
+.pe-page {
+  min-height: 100vh;
+  padding: 24rpx 30rpx calc(60rpx + env(safe-area-inset-bottom));
+  background: #f1f2ed;
+  color: #141414;
+  font-size: 26rpx;
+  line-height: 38rpx;
+}
+
+.pe-page button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: center;
+}
+.pe-page button::after { border: 0; display: none; }
+/* busy 态用 aria-disabled：原生 disabled 会触发微信内置的 button[disabled]:not([type])
+   （0,2,1），压过页面组件类（0,2,0）；交互拦截由 JS 的 busy 守卫负责。 */
+.pe-page button[aria-disabled="true"] { opacity: .55; }
+.pe-page image { display: block; }
+.pe-page input, .pe-page textarea { box-sizing: border-box; }
+.pe-page textarea { display: block; width: 100%; }
+
+/* --------------------------------------------------------------------------
+   页头 / 错误 / 骨架
+   -------------------------------------------------------------------------- */
+.pe-head { padding: 8rpx 2rpx 0; }
+.pe-head__title { display: block; color: #141414; font-size: 46rpx; line-height: 62rpx; font-weight: 700; }
+.pe-head__meta { display: block; margin-top: 6rpx; color: #767676; font-size: 24rpx; line-height: 34rpx; }
+
+.pe-err {
+  margin-top: 24rpx;
+  padding: 22rpx 24rpx;
+  border-left: 3px solid #b3261e;
+  border-radius: 27rpx;
+  background: #fdf0ee;
+}
+.pe-err__title { display: block; color: #b3261e; font-size: 25rpx; line-height: 36rpx; font-weight: 600; }
+.pe-err__text { display: block; margin-top: 4rpx; color: #b3261e; font-size: 23rpx; line-height: 34rpx; opacity: .85; }
+
+.pe-card {
+  margin-top: 24rpx;
+  padding: 34rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.pe-card--skel { display: flex; flex-direction: column; }
+.pe-skel { border-radius: 8rpx; background: #f7f7f7; }
+.pe-skel--label { width: 30%; height: 26rpx; }
+.pe-skel--input { width: 100%; height: 88rpx; margin-top: 22rpx; border-radius: 27rpx; }
+.pe-skel--area { width: 100%; height: 200rpx; margin-top: 22rpx; border-radius: 27rpx; }
+
+/* --------------------------------------------------------------------------
+   表单基元
+   -------------------------------------------------------------------------- */
+.pe-label { display: block; color: #141414; font-size: 27rpx; line-height: 38rpx; font-weight: 600; }
+.pe-label--gap { margin-top: 30rpx; }
+.pe-hint { display: block; margin-top: 12rpx; color: #767676; font-size: 23rpx; line-height: 34rpx; }
+.pe-count { display: block; margin-top: 10rpx; color: #9a9a9a; font-size: 22rpx; line-height: 30rpx; text-align: right; }
+
+.pe-input {
+  width: 100%;
+  height: 88rpx;
+  margin-top: 16rpx;
+  padding: 0 24rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 27rpx;
+  background: #f7f7f7;
+  color: #141414;
+  font-size: 27rpx;
+  line-height: 88rpx;
+}
+.pe-textarea {
+  min-height: 240rpx;
+  margin-top: 16rpx;
+  padding: 22rpx 24rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 27rpx;
+  background: #f7f7f7;
+  color: #141414;
+  font-size: 27rpx;
+  line-height: 42rpx;
+}
+
+/* chip：选中用浅绿面 + 绿字，实心绿只属于发布 CTA */
+.pe-chips { display: flex; align-items: center; flex-wrap: wrap; margin-top: 16rpx; }
+.pe-page .pe-chip {
+  flex: none;
+  white-space: nowrap;
+  height: 69rpx;
+  margin: 0 16rpx 16rpx 0;
+  padding: 0 26rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 25rpx;
+  line-height: 34rpx;
+}
+.pe-page .pe-chip--on {
+  border-color: #e8f2ec;
+  background: #e8f2ec;
+  color: #00754a;
+  font-weight: 600;
+}
+
+/* 行式选择器（可点控件必须有边框） */
+.pe-selector {
+  display: flex;
+  align-items: center;
+  min-height: 92rpx;
+  margin-top: 16rpx;
+  padding: 0 24rpx;
+  border: 1px solid #9cc3b0;
+  border-radius: 27rpx;
+  background: #ffffff;
+}
+.pe-selector__label { color: #767676; font-size: 24rpx; line-height: 34rpx; }
+.pe-selector__value {
+  flex: 1;
+  min-width: 0;
+  margin-left: 20rpx;
+  color: #00754a;
+  font-size: 26rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pe-selector__value--empty { color: #9a9a9a; font-weight: 400; }
+.pe-chev {
+  width: 24rpx;
+  height: 24rpx;
+  flex: none;
+  margin-left: 18rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 24rpx 24rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239A9A9A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.8 6.8 15 12l-5.2 5.2'/%3E%3C/svg%3E");
+}
+
+.pe-selected { display: flex; flex-wrap: wrap; margin-top: 16rpx; }
+.pe-selected__item {
+  display: flex;
+  align-items: center;
+  height: 69rpx;
+  margin: 0 16rpx 16rpx 0;
+  padding: 0 12rpx 0 26rpx;
+  border-radius: 999rpx;
+  background: #e8f2ec;
+}
+.pe-selected__name { color: #00754a; font-size: 25rpx; line-height: 34rpx; }
+.pe-page .pe-selected__x {
+  width: 52rpx;
+  height: 52rpx;
+  margin-left: 6rpx;
+  border-radius: 50%;
+  color: #00754a;
+  font-size: 32rpx;
+  line-height: 32rpx;
+}
+
+/* --------------------------------------------------------------------------
+   图片选择器
+   -------------------------------------------------------------------------- */
+.pe-photos { display: flex; flex-wrap: wrap; margin-top: 20rpx; }
+.pe-page .pe-photo {
+  position: relative;
+  width: 196rpx;
+  height: 196rpx;
+  margin: 0 16rpx 16rpx 0;
+  border-radius: 27rpx;
+  background: #f7f7f7;
+}
+.pe-photo__img { width: 196rpx; height: 196rpx; border-radius: 27rpx; background: #e9ebe3; }
+.pe-page .pe-photo__x {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, .62);
+  color: #ffffff;
+  font-size: 30rpx;
+  line-height: 30rpx;
+}
+.pe-page .pe-photo--add {
+  display: flex;
+  flex-direction: column;
+  border: 1px dashed #9cc3b0;
+  background: #ffffff;
+}
+.pe-photo__plus { color: #00754a; font-size: 46rpx; line-height: 46rpx; font-weight: 300; }
+.pe-photo__count { margin-top: 8rpx; color: #767676; font-size: 22rpx; line-height: 30rpx; }
+
+/* --------------------------------------------------------------------------
+   可见范围：两选一行式选项（public / private）
+   -------------------------------------------------------------------------- */
+.pe-page .pe-opt {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 92rpx;
+  margin-top: 16rpx;
+  padding: 18rpx 24rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 27rpx;
+  background: #ffffff;
+  text-align: left;
+}
+.pe-page .pe-opt--on { border-color: #9cc3b0; background: #e8f2ec; }
+.pe-opt__copy { flex: 1; min-width: 0; }
+.pe-opt__title { display: block; color: #141414; font-size: 27rpx; line-height: 38rpx; font-weight: 600; }
+.pe-page .pe-opt--on .pe-opt__title { color: #00754a; }
+.pe-opt__text { display: block; margin-top: 4rpx; color: #767676; font-size: 23rpx; line-height: 34rpx; }
+.pe-radio {
+  width: 40rpx;
+  height: 40rpx;
+  flex: none;
+  margin-left: 20rpx;
+  border: 2rpx solid #e5e5e5;
+  border-radius: 50%;
+  background: #ffffff;
+}
+.pe-page .pe-opt--on .pe-radio {
+  border-color: #00754a;
+  background-color: #00754a;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 24rpx 24rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.6 12.4 10 16.8l8.4-9.2'/%3E%3C/svg%3E");
+}
+
+.pe-note {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 27rpx;
+  background: #fbf4ec;
+  color: #8a4c13;
+  font-size: 23rpx;
+  line-height: 36rpx;
+}
+.pe-note--quiet { background: #f7f7f7; color: #767676; }
+
+/* --------------------------------------------------------------------------
+   发布前预览：与社区卡片同构
+   -------------------------------------------------------------------------- */
+.pe-preview__post {
+  margin-top: 20rpx;
+  padding: 28rpx;
+  border-radius: 27rpx;
+  background: #f7f7f7;
+}
+.pe-preview__head { display: flex; align-items: center; }
+.pe-preview__author { flex: 1; min-width: 0; color: #4a4a4a; font-size: 24rpx; line-height: 34rpx; }
+.pe-preview__vis { flex: none; height: 44rpx; padding: 0 18rpx; border-radius: 999rpx; background: #e8f2ec; color: #00754a; font-size: 22rpx; line-height: 44rpx; }
+.pe-preview__title { display: block; margin-top: 18rpx; color: #141414; font-size: 30rpx; line-height: 42rpx; font-weight: 600; }
+.pe-preview__meta { display: block; margin-top: 8rpx; color: #767676; font-size: 23rpx; line-height: 32rpx; }
+.pe-preview__content { display: block; margin-top: 14rpx; color: #4a4a4a; font-size: 26rpx; line-height: 42rpx; white-space: pre-wrap; }
+.pe-preview__cover { width: 100%; height: 254rpx; margin-top: 20rpx; border-radius: 27rpx; background: #e9ebe3; }
+
+/* --------------------------------------------------------------------------
+   操作区：一屏只有一个实心绿主 CTA
+   -------------------------------------------------------------------------- */
+.pe-actions { margin-top: 46rpx; }
+.pe-actions__row { display: flex; align-items: center; flex-wrap: wrap; }
+.pe-page .pe-btn {
+  flex: none;
+  white-space: nowrap;
+  height: 85rpx;
+  margin: 0 16rpx 16rpx 0;
+  padding: 0 34rpx;
+  border-radius: 999rpx;
+  font-size: 27rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+}
+.pe-page .pe-btn--quiet { border: 1px solid #e5e5e5; background: #ffffff; color: #4a4a4a; font-weight: 400; }
+.pe-page .pe-btn--primary { background: #00754a; color: #ffffff; }
+.pe-page .pe-btn--block { width: 100%; height: 92rpx; margin: 8rpx 0 0; }

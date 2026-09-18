@@ -1,44 +1,75 @@
 {
   "pages": [
+    "pages/me/me",
     "pages/index/index",
+    "pages/map-search/map-search",
+    "pages/map-selection/map-selection",
+    "pages/menu/menu",
     "pages/itinerary/itinerary",
-    "pages/guides/guides",
-    "pages/tools/tools",
+    "pages/community/community",
+    "pages/plan-detail/plan-detail",
     "pages/place-detail/place-detail",
-    "pages/segment-detail/segment-detail",
-    "pages/guide-detail/guide-detail"
+    "pages/booking/booking",
+    "pages/post-edit/post-edit",
+    "pages/post-detail/post-detail",
+    "pages/member/member"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationStyle": "custom",
-    "backgroundColor": "#f5f1e8",
+    "navigationStyle": "default",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#F1F2ED",
     "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#73766f",
-    "selectedColor": "#2f6654",
-    "backgroundColor": "#fffdf7",
-    "borderStyle": "white",
+    "color": "#767676",
+    "selectedColor": "#00754A",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
     "list": [
-      { "pagePath": "pages/index/index", "text": "地图" },
-      { "pagePath": "pages/itinerary/itinerary", "text": "行程" },
-      { "pagePath": "pages/guides/guides", "text": "攻略" },
-      { "pagePath": "pages/tools/tools", "text": "工具" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/tabbar/home.png",
+        "selectedIconPath": "assets/tabbar/home-on.png"
+      },
+      {
+        "pagePath": "pages/menu/menu",
+        "text": "菜单",
+        "iconPath": "assets/tabbar/menu.png",
+        "selectedIconPath": "assets/tabbar/menu-on.png"
+      },
+      {
+        "pagePath": "pages/itinerary/itinerary",
+        "text": "行程",
+        "iconPath": "assets/tabbar/trip.png",
+        "selectedIconPath": "assets/tabbar/trip-on.png"
+      },
+      {
+        "pagePath": "pages/community/community",
+        "text": "社区",
+        "iconPath": "assets/tabbar/community.png",
+        "selectedIconPath": "assets/tabbar/community-on.png"
+      },
+      {
+        "pagePath": "pages/me/me",
+        "text": "我的",
+        "iconPath": "assets/tabbar/me.png",
+        "selectedIconPath": "assets/tabbar/me-on.png"
+      }
     ]
   },
   "style": "v2",
-  "renderer": "skyline",
-  "rendererOptions": {
-    "skyline": {
-      "defaultDisplayBlock": true,
-      "defaultContentBox": true,
-      "tagNameStyleIsolation": "legacy",
-      "disableABTest": true,
-      "sdkVersionBegin": "3.0.0",
-      "sdkVersionEnd": "15.255.255"
+  "renderer": "webview",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于获取当前位置并通过腾讯位置服务解析附近地点"
     }
   },
-  "componentFramework": "glass-easel",
+  "requiredPrivateInfos": [
+    "getLocation",
+    "chooseLocation"
+  ],
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"
 }

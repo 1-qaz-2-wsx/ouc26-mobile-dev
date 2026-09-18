@@ -1,0 +1,859 @@
+/* ==========================================================================
+   菜单三步（p06 地点清单 / p07 要求 / p08 生成前确认）
+   设计真值：设计稿/旅行规划助手 · UI 统一重设计.pdf（p06/p07/p08 像素实测）
+            + specs/frontend-refactor/design-system-contract.md（令牌与组件规格）
+   令牌来源：mysummerapp/styles/tokens.wxss（G1A），本文件不新造主题。
+
+   换算（G3-R1 重新标定，2026-09-18）：
+     PDF 渲染 542px 宽，卡片圆角实测 27px；契约圆角 20px → 20×1.923 = 38rpx。
+     故 27 pdf_px 必须等于 38rpx ⇒ rpx = pdf_px × 1.3838（等价于 542px 画板 = 750rpx）。
+     本文件所有尺寸均按此系数从 PDF 实测值换算，并在注释里标注原始 pdf_px。
+
+   命名：本页类名统一 m* 前缀，避免与 styles/mvp.wxss 的
+        .note/.row/.title/.panel/.tag/.muted/.error 静默串味（契约 §7.3）。
+   ========================================================================== */
+
+/* mvp 的灰阶页面底会在页面作用域覆盖 app.wxss 的 G1A 画布底；
+   本页按契约 §1.1 / AGENTS.md §7 改回绿基线画布。 */
+page {
+  background: #f1f2ed;
+  color: #141414;
+}
+
+/* 页面内基础元素复位：mvp 的灰阶按钮/输入框默认值不再参与本页外观。
+   ⚠️ 按钮规则必须带 button. 前缀：微信内置的 button[disabled]:not([type]) 特异度
+   为 (0,2,1)，单纯 .menu-page .mbtn（0,2,0）压不过它，会把「当前步」染成框架灰
+   —— 这正是 G3-R1 反馈的「进度条落后一个阶段」的真实原因。 */
+.menu-page {
+  min-height: 100vh;
+  padding: 33rpx 30rpx calc(180rpx + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  background: #f1f2ed;
+  font-size: 27rpx;
+  line-height: 1.55;
+}
+.menu-page button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* ⚠️ min-height 必须显式清零：mvp.wxss:12 的 button{min-height:84rpx}（0,0,1）
+     只在本条未声明该属性时生效，会把所有比 84rpx 矮的自定义按钮
+     （步骤条 68 / chip 71 / mbtn-sm 61 / mtype 48 / mstepper-b 55rpx）全部撑到 84rpx
+     —— 这正是 Owner 反馈「各种框普遍过长/过高」的总根因。
+     步骤条此前只是被 .msteps 的 overflow:hidden 裁掉了，问题被掩盖。 */
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  /* 整数行高：小数倍率（mvp 的 1.35）会级联出半像素基线 → 文字发糊。 */
+  line-height: 36rpx;
+  text-align: left;
+}
+.menu-page button::after { border: 0; }
+.menu-page input,
+.menu-page textarea {
+  display: block;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #141414;
+  font-size: inherit;
+  line-height: inherit;
+}
+.menu-page picker { display: block; margin: 0; padding: 0; border: 0; background: transparent; }
+
+/* 数字一律等宽，避免金额/日期跳动 */
+.mnum { font-variant-numeric: tabular-nums; }
+
+/* ---------- 页头（仅 step 1 有；p07/p08 无页头） ---------- */
+/* PDF p06：页头 ink y178-203（h=26 → 40rpx），右侧「第 1 步 / 共 3 步」h=19 → 25rpx */
+.mhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 0 0 33rpx;
+}
+.mhead-t { color: #141414; font-size: 40rpx; font-weight: 700; line-height: 1.3; }
+.mhead-x { flex: none; color: #767676; font-size: 25rpx; }
+
+/* ---------- 连续分段步骤条（p06/p07/p08 同一形态） ----------
+   PDF 实测（三页交叉验证一致）：p06 顶边框 y227 / 底边框 y275，
+   p07、p08 均为 y170 / y218 —— 外框高 = 49px（含上下各 1px 边框，
+   内部填充 y228-274 = 47px）→ **68rpx**（box-sizing:border-box 含边框）。
+   ⚠️ 旧注释记的「47px」是**只数了填充行、漏掉上下两条边框**；
+   p06/p07/p08 三页复测均为 49px，故 G3-R3 由 65rpx 修正为 68rpx。
+   三段各 166px（x22-186 / 188-352 / 355-519）；段间 1px #E5E5E5 分隔线；
+   未开始段底 #F7F7F7 + #767676 字；已完成段与当前段同为实心 #00754A。 */
+.msteps {
+  display: flex;
+  height: 68rpx;
+  margin: 0 0 26rpx;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  overflow: hidden;
+}
+.menu-page .mstep {
+  flex: 1;
+  min-width: 0;
+  height: 68rpx;
+  padding: 0 8rpx;
+  border-right: 1px solid #e5e5e5;
+  background: transparent;
+  color: #767676;
+  font-size: 25rpx;
+  text-align: center;
+}
+.menu-page .mstep:last-child { border-right: 0; }
+.mstep-t {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 当前步与已完成步同为实心品牌绿（PDF 实测：p06 仅第 1 段、p07 第 1+2 段、
+   p08 三段全绿），右侧分隔线同色。
+   ⚠️ 真正的修复是 WXML 去掉 disabled：框架的 button[disabled]:not([type])（0,2,1）
+   与 .menu-page button.mstep-on（0,2,1）特异度打平，只靠声明顺序并不稳；
+   去掉 disabled 后该框架规则根本不匹配，品牌绿才稳定生效。
+   保留 button. 前缀是为了顺带压过 mvp.wxss 的 button[disabled]（0,1,1）。 */
+.menu-page button.mstep-on {
+  background: #00754a;
+  border-right-color: #00754a;
+  color: #ffffff;
+  font-weight: 500;
+}
+.menu-page button.mstep-on:last-child { border-right-color: transparent; }
+/* 该步存在校验错误：保留分段形态，仅换语义色 */
+.menu-page button.mstep-err { background: #fbf4ec; border-right-color: #fbf4ec; color: #8a4c13; }
+.menu-page button.mstep-on.mstep-err { background: #8a4c13; border-right-color: #8a4c13; color: #ffffff; }
+
+/* ---------- 通用块 ---------- */
+/* PDF p06：区块标题「想去哪里」ink h=20 → 31rpx；步骤条底 → 标题 ink 32px → 26rpx 间距 */
+.msec {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 26rpx 0 15rpx;
+}
+.msec:first-child { margin-top: 0; }
+.msec-t { color: #141414; font-size: 31rpx; font-weight: 600; line-height: 1.4; }
+.msec-x { flex: none; color: #767676; font-size: 25rpx; }
+.msub { display: block; margin: 0 0 15rpx; color: #767676; font-size: 25rpx; line-height: 1.5; }
+.mhint { display: block; margin-top: 10rpx; color: #767676; font-size: 23rpx; line-height: 1.5; }
+
+/* PDF 实测：卡片 x22-519（498px 宽）、内边距 24px → 33rpx、圆角 27px → 38rpx、
+   无描边无投影；卡片间距 16px → 22rpx（p07 卡1 y236-666、卡2 y683-973）。 */
+.mcard {
+  margin-bottom: 22rpx;
+  padding: 33rpx;
+  border: 0;
+  border-radius: 38rpx;
+  background: #ffffff;
+  box-shadow: none;
+}
+.mcard:last-child { margin-bottom: 0; }
+.mcard-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 19rpx;
+  margin-bottom: 8rpx;
+}
+.mcard-hd-t { color: #4a4a4a; font-size: 25rpx; font-weight: 600; }
+.mdiv { height: 1px; background: #e5e5e5; }
+.mdiv-inset { margin: 23rpx 0; }
+
+/* 提示条（契约 §2.10；按 §7.3 改名，不用 .note） */
+.mtip {
+  margin-top: 23rpx;
+  padding: 23rpx 27rpx;
+  border-radius: 27rpx;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+.mtip-warn { background: #fbf4ec; color: #8a4c13; }
+.mtip-grey { background: #f7f7f7; color: #767676; }
+.mtip-grn { background: #e8f2ec; color: #1e3932; }
+
+/* 错误条（契约 §2.10 .err） */
+.merr {
+  margin: 0 0 22rpx;
+  padding: 23rpx 27rpx;
+  border-left: 3px solid #b3261e;
+  border-radius: 27rpx;
+  background: #fdf0ee;
+  color: #b3261e;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/* ---------- 按钮（契约 §2.1；尺寸按 PDF 实测） ----------
+   ⚠️ 每一个按钮类都必须带 `.menu-page ` 前缀（≥0,2,0）。
+   本文件上方的 `.menu-page button` 复位（0,2,0）会压过任何 (0,1,0) 的裸类，
+   把 background / border / border-radius / padding / color 全部改回
+   transparent / 0 / 0 / 0 / inherit —— 这正是「按钮只剩文字、没有边框和底色」的根因。
+   G3-R2 修复：此前 .mbtn / .mbtn-sec / .mbtn-sm / .mbtn-danger / button.hv-* 全是裸类，
+   所以底部主次按钮、卡片删除按钮、hover 反馈全部失效。 */
+/* PDF 底栏按钮高：p06 y554-615 / p08 y1062-1123 均 62px → 86rpx
+   （p07 为 67px，三页不一致，按多数 p06+p08 取值）。 */
+.menu-page .mbtn {
+  height: 86rpx;
+  padding: 0 46rpx;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 500;
+  justify-content: center;
+}
+.menu-page .mbtn-block { width: 100%; }
+/* PDF p06/p07 次按钮同为 62px 高：白底 + #9CC3B0 描边 + 绿字 */
+.menu-page .mbtn-sec {
+  height: 86rpx;
+  padding: 0 46rpx;
+  border: 1px solid #9cc3b0;
+  background: #ffffff;
+  color: #00754a;
+}
+/* 卡内小动作（删除 / 修改地点 / 预览修改）：PDF 实测 44px 高、15rpx 圆角软矩形 */
+.menu-page .mbtn-sm {
+  height: 61rpx;
+  padding: 0 28rpx;
+  border-radius: 15rpx;
+  background: #e8f2ec;
+  color: #00754a;
+  font-size: 24rpx;
+  font-weight: 500;
+}
+.menu-page .mbtn-ghost { background: #f7f7f7; color: #4a4a4a; }
+/* PDF p06 删除：底 #FDF0EE + 字 #B3261E（实测 y370-413，高 44px，15rpx 圆角） */
+.menu-page .mbtn-danger { background: #fdf0ee; color: #b3261e; }
+
+/* 点击反馈：hover-class 负责，:active 只作兜底 */
+.menu-page button:active { opacity: .72; }
+.menu-page button[disabled]:active { opacity: 1; }
+
+/* 禁用态：不依赖 hover-class，任何情况下都要可辨认。
+   必须用 button. 前缀（0,3,1）压过微信内置的 button[disabled]:not([type])（0,2,1）。 */
+.menu-page button.mbtn[disabled] { background: #f1f2ed; color: #9a9a9a; }
+.menu-page button.mbtn-sec[disabled] { border-color: #e5e5e5; background: #f1f2ed; color: #9a9a9a; }
+.menu-page button.mbtn-sm[disabled] { background: #f1f2ed; color: #9a9a9a; }
+
+/* hover-class 也必须带前缀：button.hv-* 只有 (0,1,1)，同样会被页面复位压过 */
+.menu-page button.hv-dark { background: #005f3b; color: #ffffff; opacity: 1; }
+.menu-page button.hv-sec { background: #e8f2ec; opacity: 1; }
+.menu-page button.hv-ghost { background: #e9ebe3; opacity: 1; }
+.menu-page button.hv-del { background: #f7dcd8; opacity: 1; }
+.menu-page button.hv-flat { opacity: .6; }
+.menu-page button.hv-step { opacity: .65; }
+.menu-page button.hv-dark[disabled],
+.menu-page button.hv-sec[disabled],
+.menu-page button.hv-ghost[disabled],
+.menu-page button.hv-del[disabled] {
+  background: #f1f2ed;
+  color: #9a9a9a;
+  opacity: 1;
+}
+
+/* ---------- 步骤 1：地点清单（p06） ---------- */
+
+.mdrag-hint {
+  display: inline-block;
+  margin: 0 0 15rpx;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: #1e3932;
+  color: #ffffff;
+  font-size: 22rpx;
+}
+
+.mlist { display: block; }
+.menu-page .destination-card {
+  position: relative;
+  margin-bottom: 22rpx;
+  padding: 33rpx;
+  border: 0;
+  border-radius: 38rpx;
+  background: #ffffff;
+  box-shadow: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.menu-page .mdragging { opacity: .62; transform: scale(.99); }
+.menu-page .mdroptarget { box-shadow: inset 0 3px 0 0 #00754a; }
+
+/* PDF p06 行1：拖动把手 + 序号 + 名称/副标题 + 删除，整行约 55px → 76rpx */
+.mcard-hd-row {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  min-height: 76rpx;
+}
+.drag-handle {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 58rpx;
+  min-height: 76rpx;
+  gap: 6rpx;
+  touch-action: none;
+}
+.mgrip { width: 31rpx; height: 3rpx; border-radius: 3rpx; background: #9a9a9a; }
+
+/* 序号徽标：PDF p06 实测实心品牌绿圆形，直径 30px → 42rpx（x81-110 / y377-406） */
+.morder {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 22rpx;
+  font-weight: 600;
+}
+.mcopy { flex: 1; min-width: 0; }
+/* PDF p06：名称 ink h=20 → 31rpx；副标题 h=16 → 25rpx */
+.mname {
+  display: block;
+  overflow: hidden;
+  color: #141414;
+  font-size: 31rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mmeta {
+  display: block;
+  margin-top: 2rpx;
+  overflow: hidden;
+  color: #767676;
+  font-size: 25rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 卡片头行「删除」：PDF p06 实测 78×45px（x441-518 / y370-413）→ 108×62rpx，
+   占头行内容宽 621rpx 的 17%。
+   必须**显式写死 flex / margin / width / padding**，一个都不能靠默认值：
+   ① 宽度：基类 `.menu-page .mbtn-sm` 的宽度来自「删除」两字 + padding 0 28rpx，
+      随内容浮动；默认 `flex: 0 1 auto` 还允许被压到内容宽以下，那时两字会溢出
+      按钮盒、视觉上压住左侧地名 —— Owner 反馈的「不要遮挡地点名称」。
+   ② 位置：微信内置的 button 默认样式带 `margin-left: auto; margin-right: auto`。
+      只要页面复位在 margin 上没压住它，删除按钮就会「浮」在行中间（两侧各留一段
+      空白），同时名称列被挤到只剩几十 rpx、过早截断 —— Owner 实机截图里
+      「铧子山…」只显示 3 个字、删除左右各一大片空白，就是这个形态。
+      这里用 `margin: 0 0 0 auto` 同时做到：压掉内置 auto 外边距 + 把按钮钉在行右缘。
+   ③ 配合 `.mcopy{flex:1;min-width:0}` + `.mname{text-overflow:ellipsis}`，
+      名称列吃满剩余 368rpx，长地名只会截断，不可能压到按钮。 */
+.menu-page .mcard-hd-row .mbtn-sm {
+  flex: none;
+  margin: 0 0 0 auto;
+  width: 108rpx;
+  padding: 0;
+}
+
+/* 停留天数行：PDF 实测 stepper y433-476（44px 高）、x330-497（167px 宽）、
+   1px #E5E5E5 描边 + #F7F7F7 底 */
+.mstay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 19rpx;
+  margin-top: 10rpx;
+}
+.mstay-lb { flex: none; color: #4a4a4a; font-size: 25rpx; }
+.menu-page .mstepper {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 231rpx;
+  height: 61rpx;
+  padding: 0 3rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+}
+.menu-page .mstepper-b {
+  width: 55rpx;
+  height: 55rpx;
+  border-radius: 50%;
+  color: #4a4a4a;
+  font-size: 31rpx;
+  justify-content: center;
+  text-align: center;
+}
+.menu-page button.mstepper-b[disabled] { color: #c9c9c9; background: transparent; }
+.menu-page .mstepper-v {
+  width: 69rpx;
+  min-height: 55rpx;
+  color: #141414;
+  font-size: 25rpx;
+  font-weight: 500;
+  text-align: center;
+}
+.mstepper-u { flex: none; color: #4a4a4a; font-size: 25rpx; }
+
+/* 备注：PDF 实测为卡内常显无框输入，占位文字即提示 */
+.menu-page .mnote {
+  width: 100%;
+  min-height: 65rpx;
+  margin-top: 10rpx;
+  color: #141414;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+.menu-page .mnote::placeholder { color: #767676; }
+
+/* 空态（状态，不是硬编码图片） */
+.mempty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 23rpx;
+  margin: 0 0 22rpx;
+  padding: 62rpx 33rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+  text-align: center;
+}
+.mempty-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 27rpx;
+  background: #f7f7f7;
+  color: #9a9a9a;
+  font-size: 44rpx;
+  font-weight: 300;
+}
+.mempty-t { color: #141414; font-size: 31rpx; font-weight: 600; }
+.mempty-p { margin-top: -10rpx; color: #767676; font-size: 25rpx; line-height: 1.55; }
+.mempty-n { color: #9a9a9a; font-size: 23rpx; }
+
+/* 次级入口：清空全部地点（画布未画，保留但降级） */
+.msecondary { display: flex; justify-content: flex-end; margin-bottom: 22rpx; }
+
+/* ---------- 步骤 2：出行要求（p07） ---------- */
+
+/* 信息行：标签左 / 值右（契约 §2.4 .row → .mkv）
+   PDF 实测：标签 ink h=16 → 25rpx；行距 63px（出发日期 ink 274 → 返回日期 ink 338）→ 87rpx */
+.mkv {
+  display: flex;
+  align-items: center;
+  gap: 23rpx;
+  min-height: 87rpx;
+}
+/* PDF 是「标签左 / 值右」——值胶囊贴着卡片右内边距（实测胶囊右缘 x497 = 卡片内容右缘）。
+   .mkv 不设 justify-content，改由值侧 margin-left:auto 撑开，这样
+   「标签 + 值」之间自动留白，且不影响 .mfield 里「标签上 / 控件下」的另一种布局。
+   picker 包一层时两条都要写：picker 若是内容宽则靠它右推，picker 若被拉宽则靠胶囊自己右推。 */
+.menu-page .mkv > .mvpill,
+.menu-page .mkv > picker,
+.menu-page .mkv picker .mvpill { margin-left: auto; }
+.mkv-lb { flex: none; color: #4a4a4a; font-size: 25rpx; }
+.mkv-grn { color: #00754a; font-weight: 600; font-size: 25rpx; }
+/* 总天数在画布上是右侧绿字（无框）。保留真实可编辑输入，但做成与画布一致的行内绿字，
+   不再是一个加框控件（round-03 §2.2 冻结 days 的真实输入语义）。 */
+.mkv-grp { display: flex; align-items: baseline; gap: 6rpx; margin-left: auto; }
+.menu-page .mkv-inp {
+  width: 84rpx;
+  min-height: 44rpx;
+  color: #00754a;
+  font-size: 25rpx;
+  font-weight: 600;
+  text-align: right;
+}
+.mkv-u { flex: none; color: #00754a; font-size: 25rpx; font-weight: 600; }
+
+/* 值胶囊：PDF 实测高 45px（出发日期 y258-302 / 返回日期 y322-366 / 预算 y433-477 三处一致）
+   → 62rpx；左右内边距 18px → 24rpx；底 #F7F7F7 + 1px #9CC3B0 描边；
+   ⚠️ 胶囊内文字是墨色 #141414（不是绿字），只有日历图标是品牌绿。
+   flex:none —— 胶囊必须按内容收缩、靠右，绝不参与拉伸。 */
+.menu-page .mvpill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 10rpx;
+  height: 62rpx;
+  padding: 0 24rpx;
+  border: 1px solid #9cc3b0;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  color: #141414;
+  font-size: 25rpx;
+  font-weight: 500;
+  line-height: 36rpx;
+  white-space: nowrap;
+}
+/* ⚠️ 必须带 .menu-page 前缀：本文件上方的 `.menu-page input{width:auto}`（0,2,0）
+   会压过裸 `.mvpill-inp`（0,1,0），使胶囊里的 input 退回默认宽度、把整条胶囊撑满一行
+   —— 这正是 Owner 截图里「人数 / 预算」两个框被拉长的直接原因。 */
+.menu-page .mvpill-inp {
+  flex: none;
+  width: 84rpx;
+  height: 36rpx;
+  min-height: 0;
+  color: #141414;
+  font-size: 25rpx;
+  font-weight: 500;
+  line-height: 36rpx;
+  text-align: right;
+}
+.mvpill-pre { flex: none; color: #141414; font-size: 25rpx; }
+.mvpill-suf { flex: none; color: #141414; font-size: 25rpx; }
+
+/* CSS 绘制图标：不引入图标字体 / 外链图片 */
+.mcal {
+  position: relative;
+  flex: none;
+  width: 24rpx;
+  height: 22rpx;
+  border: 2rpx solid #00754a;
+  border-radius: 5rpx;
+}
+.mcal::before {
+  content: "";
+  position: absolute;
+  top: 4rpx;
+  left: 0;
+  right: 0;
+  height: 2rpx;
+  background: #00754a;
+}
+.mcal::after {
+  content: "";
+  position: absolute;
+  top: -6rpx;
+  left: 4rpx;
+  width: 2rpx;
+  height: 6rpx;
+  background: #00754a;
+  box-shadow: 10rpx 0 0 #00754a;
+}
+.mchev {
+  flex: none;
+  width: 14rpx;
+  height: 14rpx;
+  margin-left: 8rpx;
+  border-top: 2rpx solid #9a9a9a;
+  border-right: 2rpx solid #9a9a9a;
+  transform: rotate(45deg);
+}
+
+/* 出发地行：PDF p07 实测 icon 圆 y596-641（46px → 64rpx），主 31rpx、副 25rpx */
+.mrow-link {
+  display: flex;
+  align-items: center;
+  gap: 23rpx;
+  min-height: 87rpx;
+}
+.mico {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 27rpx;
+  background: #e8f2ec;
+}
+.mpin {
+  position: relative;
+  width: 22rpx;
+  height: 22rpx;
+  border: 2rpx solid #00754a;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+}
+.mpin::after {
+  content: "";
+  position: absolute;
+  top: 6rpx;
+  left: 6rpx;
+  width: 5rpx;
+  height: 5rpx;
+  border: 2rpx solid #00754a;
+  border-radius: 50%;
+}
+
+/* 预算滑杆：PDF 实测轨道 y506-510（5px → 7rpx 高），两端文案 ink h=12 → 23rpx */
+.mslider { margin: 6rpx 0 0; }
+.mslider-ends {
+  display: flex;
+  justify-content: space-between;
+  color: #767676;
+  font-size: 23rpx;
+}
+
+/* 交通方式 chip（PDF 实测：高 51px → 71rpx；间距 11px → 15rpx；
+   单个 chip 宽 98px → 136rpx，即「内距 20px + 图标 15px + 间距 13px + 文字 + 内距 18px」；
+   选中 = #E8F2EC 浅绿面 + 绿字 + 绿图标 + 无描边；
+   未选中 = 白底 + 1px #E5E5E5 + 文字 #4A4A4A + **图标 #767676**（图标比文字浅，像素实测）。
+   flex:none —— chip 一律按内容收缩，不参与拉伸。 */
+.mchip-row { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 15rpx; }
+.menu-page .mchip {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  height: 71rpx;
+  margin: 0;
+  padding: 0 22rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 25rpx;
+  line-height: 36rpx;
+}
+.menu-page .mchip checkbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  opacity: 0;
+}
+.menu-page .mchip-on {
+  border-color: #e8f2ec;
+  background: #e8f2ec;
+  color: #00754a;
+  font-weight: 500;
+}
+
+/* ---------- 交通方式图标（28×28 线性图标，与 设计稿/app/icons.js 同规格：
+   viewBox 24 / 描边 1.7 / 圆头圆接 / 无填充）----------
+   用 data-URI SVG 内联，不引入图标字体或外链图片（契约 §4.4）。
+   ⚠️ data-URI 无法继承 currentColor，故选中/未选中各出一份，共 10 条。
+   图标键由 menu.js 的 MODE_ICONS 映射（engine.MODES 的顺序与集合不得改）。 */
+.mchip-ico {
+  flex: none;
+  width: 32rpx;
+  height: 32rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+/* 高铁（= 设计稿 icons.js 的 train 字形，与 PDF 逐像素吻合） */
+.mchip-ico-rail { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='4' width='14' height='13' rx='3'/%3E%3Cpath d='M5 11h14M9 20l2-3M15 20l-2-3'/%3E%3C/svg%3E"); }
+.menu-page .mchip-on .mchip-ico-rail { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='4' width='14' height='13' rx='3'/%3E%3Cpath d='M5 11h14M9 20l2-3M15 20l-2-3'/%3E%3C/svg%3E"); }
+/* 火车（机车正面：圆锅炉 + 梯形裙 + 底梁）。icons.js 无对应字形，按 PDF 实测补。 */
+.mchip-ico-loco { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.6' r='4.6'/%3E%3Cpath d='M8.8 12.1 6.9 18.6h10.2l-1.9-6.5'/%3E%3C/svg%3E"); }
+.menu-page .mchip-on .mchip-ico-loco { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8.6' r='4.6'/%3E%3Cpath d='M8.8 12.1 6.9 18.6h10.2l-1.9-6.5'/%3E%3C/svg%3E"); }
+/* 飞机（机头朝右上，与 PDF 实测的客机轮廓一致；icons.js 的 plane 是纸飞机，形态不符） */
+.mchip-ico-plane { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z'/%3E%3C/svg%3E"); }
+.menu-page .mchip-on .mchip-ico-plane { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z'/%3E%3C/svg%3E"); }
+/* 大巴（PDF 未画该方式，按同一线性风格补：圆角车身 + 风挡横带 + 中缝 + 双轮） */
+.mchip-ico-bus { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='3.5' width='15' height='13' rx='2.5'/%3E%3Cpath d='M12 3.5v6.5M4.5 10h15'/%3E%3Cpath d='M8 16.5v3M16 16.5v3'/%3E%3C/svg%3E"); }
+.menu-page .mchip-on .mchip-ico-bus { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='3.5' width='15' height='13' rx='2.5'/%3E%3Cpath d='M12 3.5v6.5M4.5 10h15'/%3E%3Cpath d='M8 16.5v3M16 16.5v3'/%3E%3C/svg%3E"); }
+/* 自驾（= 设计稿 icons.js 的 car 字形） */
+.mchip-ico-car { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 16v2.5M19 16v2.5'/%3E%3Cpath d='M4.5 16v-3.4l1.6-4.1h11.8l1.6 4.1V16z'/%3E%3Cpath d='M4.5 12.6h15'/%3E%3C/svg%3E"); }
+.menu-page .mchip-on .mchip-ico-car { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 16v2.5M19 16v2.5'/%3E%3Cpath d='M4.5 16v-3.4l1.6-4.1h11.8l1.6 4.1V16z'/%3E%3Cpath d='M4.5 12.6h15'/%3E%3C/svg%3E"); }
+
+/* 预算口径 chips（人均 / 全团）：画布未画，按 §2.4 降级为 48rpx 次级控制，语义不变。
+   ⚠️ flex:none + width:auto + min-width:0 三者缺一不可 —— 否则该按钮会被拉成
+   等分整行的「铺满式长框」（Owner 已明确拒绝这种形态）。 */
+.mtypes { display: flex; align-items: center; justify-content: flex-end; gap: 12rpx; margin-top: 15rpx; }
+.mtypes-lb { flex: none; color: #767676; font-size: 23rpx; }
+.menu-page .mtype {
+  flex: none;
+  width: auto;
+  min-width: 0;
+  height: 48rpx;
+  padding: 0 20rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 23rpx;
+  line-height: 32rpx;
+}
+.menu-page button.mtype-on { border-color: #e8f2ec; background: #e8f2ec; color: #00754a; font-weight: 500; }
+
+/* 折叠区（更多条件 / 高级规划设置 / 已生成方案调整） */
+.menu-page .mfold {
+  width: 100%;
+  min-height: 90rpx;
+  justify-content: space-between;
+  gap: 19rpx;
+  color: #141414;
+  font-size: 29rpx;
+  font-weight: 600;
+}
+.mfold-x { flex: none; color: #00754a; font-size: 24rpx; font-weight: 500; }
+.mfold-body { padding-top: 8rpx; border-top: 1px solid #e5e5e5; }
+
+/* 折叠区外的「取消本次任务」：.mbar 内的次按钮由 .mbar 规则接管，
+   这里只兜住独立那个 —— 用 inline-flex 让它按内容收窄，不要铺满整行。 */
+.menu-page > .mbtn-sec { display: inline-flex; width: auto; margin-top: 15rpx; }
+
+/* 折叠区内的次级输入：48rpx 高胶囊，不再是铺满式长框 */
+.mfield { display: block; margin-top: 23rpx; }
+.mfield-lb { display: block; margin-bottom: 10rpx; color: #4a4a4a; font-size: 24rpx; }
+.menu-page .minp {
+  width: 100%;
+  min-height: 48rpx;
+  padding: 0 24rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  color: #141414;
+  font-size: 25rpx;
+}
+.menu-page .minp::placeholder { color: #9a9a9a; }
+.menu-page .marea {
+  min-height: 100rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 27rpx;
+  line-height: 1.55;
+}
+.mfield-err { display: block; margin-top: 8rpx; color: #b3261e; font-size: 23rpx; line-height: 1.5; }
+.menu-page .mswitch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 31rpx;
+  min-height: 87rpx;
+}
+.menu-page .mswitch switch { flex: none; }
+
+/* ---------- 步骤 3：生成前确认（p08） ---------- */
+
+/* PDF 实测：纯文本行 + hairline，无方块徽标 */
+.mroute { display: block; }
+.mroute-row {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+  min-height: 77rpx;
+  border-bottom: 1px solid #e5e5e5;
+}
+.mroute-row:last-child { border-bottom: 0; }
+.mroute-n {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #141414;
+  font-size: 27rpx;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mroute-d { flex: none; color: #767676; font-size: 25rpx; }
+
+/* 出行要求 2 列网格（PDF p08：出发日期/返回日期、总天数/预算，住宿独占一行） */
+.mgrid { display: flex; flex-wrap: wrap; margin-top: 6rpx; }
+.mcell { flex: 0 0 50%; min-width: 0; padding: 15rpx 0; }
+.mcell-wide { flex: 0 0 100%; }
+.mcell-lb { display: block; color: #767676; font-size: 23rpx; }
+.mcell-v {
+  display: block;
+  margin-top: 4rpx;
+  overflow: hidden;
+  color: #141414;
+  font-size: 26rpx;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mcell-grn { color: #00754a; font-weight: 600; }
+/* 画布 p08 网格未画出发地/人数/交通方式/节奏，但这四项是用户输入，保留为一条低层级补充行 */
+.mrest {
+  margin-top: 6rpx;
+  padding-top: 15rpx;
+  border-top: 1px solid #e5e5e5;
+  color: #767676;
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+/* 「本次会生成」：PDF 实测白底 + 1px hairline 描边（契约 .chip） */
+.mscope { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 15rpx; }
+.menu-page .mscope-i {
+  display: inline-flex;
+  align-items: center;
+  height: 61rpx;
+  padding: 0 27rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 24rpx;
+}
+
+/* 数据源真实状态：就绪 = brand-tint/绿；未配置 = warn-bg/warn（PDF 实测） */
+.mtags { display: flex; flex-wrap: wrap; gap: 15rpx; margin-top: 15rpx; }
+.mtag {
+  display: inline-flex;
+  align-items: center;
+  height: 46rpx;
+  padding: 0 23rpx;
+  border-radius: 999rpx;
+  font-size: 23rpx;
+}
+.mtag-ok { background: #e8f2ec; color: #00754a; }
+.mtag-warn { background: #fbf4ec; color: #8a4c13; }
+
+/* ---------- 底部固定操作栏 ----------
+   PDF 实测：按钮高 62px → 86rpx；次按钮宽 134px → 185rpx；
+   主 CTA 宽 p06 258px / p07 274px → 取中 368rpx；两端对齐，中间留白
+   （p06 gap 107px、p07 94px，由 space-between 自然得到）。
+   ⚠️ 底栏**没有白色面板、也没有顶部分隔线**：p06 x=30 竖直切片显示
+   卡片底(y537) → 按钮(y554) 之间全是页底色 #F1F2ED，按钮直接坐在页底上；
+   灰线在 y638，那是**底部 tabBar 的顶边**，不是本栏的。
+   底距 tabBar 顶 638-615=23px → 32rpx，所以 padding-bottom = 32rpx。 */
+.mbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 30rpx calc(32rpx + env(safe-area-inset-bottom));
+  border-top: 0;
+  background: #f1f2ed;
+}
+/* 主 CTA 固定 368rpx、次按钮固定 185rpx。
+   ⚠️ 修饰类必须**严格高于**基类，不能靠源序：
+   `.mbar .mbtn-sec` 与 `.mbar .mbtn` 都是 (0,2,0) 时，后声明的 `.mbar .mbtn`
+   会把次按钮也撑成 368rpx ⇒ 368 + 368 = 736rpx > 底栏内容宽 690rpx（750 − 30×2）
+   ⇒ `justify-content: space-between` 失效：两按钮之间**没有间隙**，
+   主 CTA 右缘溢出到画板 x=541/542（面板宽 542）—— G3-R4 Owner 反馈
+   「两个按钮之间设置一定距离 / 设置按钮不要超出手机边框」的根因。
+   ⇒ 修饰类一律加 `button.` 前缀抬到 (0,2,1)，与基类 (0,2,0) 拉开。
+   （.mbtn-sec 与 .mbtn-block 不会同时出现，彼此不冲突。） */
+.mbar .mbtn { flex: 0 0 368rpx; }
+/* ⚠️ 底栏按钮的宽度已由 flex-basis 固定 ⇒ 横向内边距**只**决定文字可用宽度。
+   基类的 `padding: 0 46rpx` 会让 185rpx 的次按钮只剩 93rpx 可用，
+   装不下「继续选点」（4 字 × 26rpx = 104rpx）→ 文字折成两行。
+   PDF 实测该按钮横向内边距 28px（39rpx），这里收到 30rpx 留一点字体差异余量；
+   宽度固定时收窄内边距不会改变视觉（文字仍由 justify-content: center 居中）。 */
+.mbar button.mbtn-sec { flex: 0 0 185rpx; padding: 0 30rpx; }
+/* step 3 只有一个通栏主操作（PDF p08） */
+.mbar button.mbtn-block { flex: 1; }
+
+@media (orientation: landscape) {
+  .menu-page { padding-left: 60rpx; padding-right: 60rpx; }
+  .mbar { padding-left: 60rpx; padding-right: 60rpx; }
+}

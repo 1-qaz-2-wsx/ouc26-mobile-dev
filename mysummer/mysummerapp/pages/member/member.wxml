@@ -1,0 +1,85 @@
+<!-- G7 · 成员主页（Member profile）
+     只读公开信息：身份 / 简介 / 统计 / 关注操作 / 公开帖子。
+     关注与粉丝只显示数字，不提供公开名单入口；不展示任何 private 内容。 -->
+<view class="mem-page">
+
+ <view wx:if="{{error}}" class="mem-err">
+  <view class="mem-err__copy">
+   <text class="mem-err__title">成员资料没能加载</text>
+   <text class="mem-err__text">{{error}}</text>
+  </view>
+  <button class="mem-err__go" bindtap="retry">重试</button>
+ </view>
+
+ <!-- 加载骨架 -->
+ <view wx:if="{{busy}}" class="mem-card mem-card--skel">
+  <view class="mem-skel mem-skel--avatar"></view>
+  <view class="mem-skel mem-skel--name"></view>
+  <view class="mem-skel mem-skel--line"></view>
+  <view class="mem-skel mem-skel--block"></view>
+ </view>
+
+ <block wx:if="{{!busy}}">
+  <!-- 身份卡 -->
+  <view class="mem-card mem-profile">
+   <view class="mem-profile__head">
+    <image wx:if="{{user.avatarUrl || user.avatarMediaId}}" class="mem-avatar" src="{{user.avatarUrl || user.avatarMediaId}}" mode="aspectFill"/>
+    <view wx:else class="mem-avatar mem-avatar--fallback">旅</view>
+    <view class="mem-profile__copy">
+     <text class="mem-profile__name">{{user.nickname || '社区成员'}}</text>
+     <text class="mem-profile__bio">{{user.bio || '这个人还没有写简介。'}}</text>
+    </view>
+   </view>
+
+   <!-- 关注操作：本页唯一主 CTA；自己 / 本机模式下不出现关注 -->
+   <view class="mem-profile__action">
+    <button wx:if="{{cloud && canFollow}}" class="mem-follow {{following ? 'mem-follow--on' : ''}}" loading="{{followBusy}}" aria-disabled="{{followBusy}}" bindtap="follow">{{following ? '已关注' : '关注'}}</button>
+    <text wx:elif="{{isSelf}}" class="mem-self">你自己</text>
+    <text wx:elif="{{!cloud}}" class="mem-profile__hint">本机演示资料无法关注他人。</text>
+   </view>
+
+   <!-- 统计：只显示数字，数字不可点进名单 -->
+   <view class="mem-stats">
+    <view class="mem-stat"><text class="mem-stat__num">{{stats.followingCount || 0}}</text><text class="mem-stat__label">关注</text></view>
+    <view class="mem-stat"><text class="mem-stat__num">{{stats.followerCount || 0}}</text><text class="mem-stat__label">粉丝</text></view>
+    <view class="mem-stat"><text class="mem-stat__num">{{stats.likeReceivedCount || 0}}</text><text class="mem-stat__label">获赞</text></view>
+   </view>
+   <text class="mem-stats__note">关注与粉丝仅显示数量，不提供公开名单。</text>
+  </view>
+
+  <!-- 公开内容 -->
+  <view class="mem-section">
+   <view class="mem-section__head">
+    <text class="mem-section__title">公开内容</text>
+    <text class="mem-section__meta">{{posts.length ? '已加载 ' + posts.length + ' 篇' : ''}}</text>
+   </view>
+
+   <view wx:if="{{!posts.length}}" class="mem-empty">
+    <view class="mem-empty__icon"></view>
+    <text class="mem-empty__title">还没有公开内容</text>
+    <text class="mem-empty__text">对方公开的帖子会出现在这里。</text>
+   </view>
+
+   <view wx:if="{{posts.length}}" class="mem-card mem-list">
+    <view wx:for="{{posts}}" wx:key="id" class="mem-row" data-id="{{item.id}}" bindtap="open">
+     <image wx:if="{{item.photo}}" class="mem-row__thumb" src="{{item.photo}}" mode="aspectFill" lazy-load/>
+     <view class="mem-row__copy">
+      <text class="mem-row__title">{{item.title}}</text>
+      <view class="mem-row__facts">
+       <text class="mem-tag">{{item.typeLabel}}</text>
+       <text wx:if="{{item.placeText}}" class="mem-place"><text class="mem-place__icon"></text>{{item.placeText}}</text>
+      </view>
+      <text class="mem-row__counts">{{item.likeCount || 0}} 赞 · {{item.commentCount || 0}} 评论</text>
+     </view>
+     <text class="mem-chev"></text>
+    </view>
+   </view>
+
+   <!-- 分页：只有后端返回真实 nextCursor 时才出现入口；拿不到更多就不显示任何东西。 -->
+   <button wx:if="{{canLoadMore}}" class="mem-btn mem-btn--sec mem-btn--block" loading="{{loadingMore}}" aria-disabled="{{loadingMore}}" bindtap="loadMore">加载更多公开内容</button>
+   <view wx:if="{{loadingMore}}" class="mem-foot">正在加载更多…</view>
+   <view wx:elif="{{posts.length && !canLoadMore}}" class="mem-foot">已经到底了</view>
+  </view>
+ </block>
+
+</view>

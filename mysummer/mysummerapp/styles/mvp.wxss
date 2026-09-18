@@ -1,0 +1,58 @@
+/* ==========================================================================
+   LEGACY ONLY — 禁止新页面 import
+
+   本文件是 G1B 明确隔离的旧 MVP 共享样式。仍在 import 的旧页可以继续依赖，
+   但 G4/G5/G6 及任何新页面不得再 import。待所有页面完成迁移、本文件 import 数为 0 后，
+   再单独评估删除整文件；当前不要因为视觉返修在这里加覆盖规则。
+
+   MVP 共享界面：克制灰阶 + 单一强调色，优先保证信息层级和触控尺寸。
+   ========================================================================== */
+page{background:#f4f5f7;color:#20242a;font-size:28rpx;line-height:1.55;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}
+view,text,button,input,textarea,picker,image,map{box-sizing:border-box}
+.page{min-height:100vh;padding:28rpx 24rpx calc(72rpx + env(safe-area-inset-bottom))}
+.title{display:block;margin:6rpx 0 18rpx;font-size:40rpx;line-height:1.25;font-weight:700;letter-spacing:.5rpx}
+.subtitle{display:block;margin:4rpx 0 12rpx;font-size:31rpx;line-height:1.35;font-weight:650}
+.note{display:block;margin:10rpx 0;color:#707780;font-size:24rpx;line-height:1.6}
+.panel{margin:16rpx 0;padding:24rpx;border:1rpx solid #e0e3e7;border-radius:18rpx;background:#fff;box-shadow:0 6rpx 18rpx rgba(30,38,48,.04)}
+.panel:first-child{margin-top:0}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:12rpx}
+.row button{flex:1;min-width:190rpx}
+button{min-height:84rpx;margin:10rpx 0;padding:12rpx 20rpx;border:1rpx solid #c8cdd3;border-radius:12rpx;background:#fff;color:#20242a;font-size:27rpx;line-height:1.35}
+button::after{display:none}
+button.primary{border-color:#20242a;color:#fff;background:#20242a}
+button[disabled]{color:#9aa1a9;border-color:#e1e4e8;background:#f3f4f5}
+input,textarea{display:block;width:100%;min-height:84rpx;margin:8rpx 0 18rpx;padding:16rpx 18rpx;border:1rpx solid #d2d7dd;border-radius:12rpx;background:#fafbfc;color:#20242a;font-size:28rpx}
+input:focus,textarea:focus{border-color:#20242a;background:#fff}
+textarea{min-height:170rpx}
+label{display:block;margin:14rpx 0;color:#4f565e}
+picker{display:block;margin:8rpx 0 16rpx;padding:18rpx;border:1rpx solid #d2d7dd;border-radius:12rpx;background:#fafbfc}
+map{display:block;width:100%;height:440rpx;margin:16rpx 0;border-radius:18rpx;overflow:hidden;background:#e4e7eb}
+.tag{display:inline-block;margin:4rpx 8rpx 4rpx 0;padding:7rpx 13rpx;border:1rpx solid #d5d9de;border-radius:999rpx;color:#4c535b;background:#f5f6f7;font-size:23rpx}
+.selected{border:2rpx solid #20242a;background:#f7f8f9}
+.error{display:block;margin:12rpx 0;padding:16rpx 18rpx;border-left:6rpx solid #20242a;border-radius:8rpx;color:#32373d;background:#eceef0;font-size:25rpx;line-height:1.55}
+.error:empty{display:none}
+.muted{color:#7c838b}
+.item-head{min-height:96rpx;padding-bottom:8rpx}
+.toolbar{display:flex;flex-wrap:wrap;gap:10rpx}
+.toolbar button{flex:1}
+.photos{display:flex;flex-wrap:wrap;gap:10rpx}
+.photos image{width:176rpx;height:176rpx;border-radius:10rpx;background:#edf0f2}
+.floating{position:fixed;right:24rpx;bottom:calc(28rpx + env(safe-area-inset-bottom));z-index:5;min-height:76rpx;padding:14rpx 26rpx;border:0;border-radius:999rpx;color:#fff;background:#20242a;box-shadow:0 8rpx 22rpx rgba(0,0,0,.18)}
+
+/* 方案查看器（本地演示方案与后端真实草案共用同一套骨架，见 utils/plan-view.js）。
+   这些类原先只定义在 menu.wxss 里，真实草案页引用时其实没有生效，所以统一放到这里。 */
+.form-section-title{display:block;margin:6rpx 0 12rpx;color:#20242a;font-size:27rpx;font-weight:700}
+.route-map{display:block;width:100%;height:480rpx;margin:16rpx 0}
+.source-note{display:block;margin:0 0 14rpx;color:#707780;font-size:24rpx;line-height:1.6}
+.condition-row{display:flex;align-items:flex-start;justify-content:space-between;margin:10rpx 0;gap:16rpx}
+.condition-label{flex:0 0 190rpx;color:#7c838b;font-size:25rpx;line-height:1.5}
+.condition-value{flex:1;text-align:right;color:#20242a;font-size:26rpx;line-height:1.5;word-break:break-all}
+.condition-value.status-risk{color:#8a2c15}
+.condition-value.status-warn{color:#8a4c13}
+.condition-value.status-ok{color:#1f4d34}
+.result-row{margin:12rpx 0;padding:14rpx;border:1rpx solid #e6e9ec;border-radius:12rpx;background:#fafbfc}
+.result-row-selected{border-color:#20242a;background:#f7f8f9}
+.result-label{display:block;color:#20242a;font-size:26rpx;line-height:1.5}
+.result-value{display:block;margin-top:4rpx;color:#5a6169;font-size:24rpx;line-height:1.55}
+.result-toggle{display:block;margin-top:6rpx;color:#7c838b;font-size:23rpx}
+.result-detail{margin:12rpx 0 0;padding-top:12rpx;border-top:1rpx solid #e6e9ec}

@@ -1,0 +1,9 @@
+{$API_DOMAIN} {
+  @supported path /health /auth/wechat /auth/session /maps/search /maps/regeo /maps/detail /maps/poi
+  handle @supported {
+    reverse_proxy api:8787
+  }
+  handle {
+    respond "Not found" 404
+  }
+}

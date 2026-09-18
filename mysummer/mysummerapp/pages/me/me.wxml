@@ -1,0 +1,205 @@
+<!--
+  我的 · pages/me —— G6 重设计（G0 绿基线，不使用 Figma / 旧 PDF 作为视觉真值）
+
+  一级结构（高频在前）：身份 → 我的旅行 → 社区内容
+  低频能力（设置 / 数据说明 / 本机历史内容重发）收进右上角「设置」，
+  以本页抽屉单独打开；关注 / 粉丝 / 互动通知仍是本页内部的二级 state，不新增第 14 个页面。
+-->
+<view class="me-page">
+ <!-- 顶行：账号状态 + 右上角「设置」入口 -->
+ <view class="me-topbar">
+  <text class="me-topbar__text">{{account.stateLabel}}</text>
+  <button class="me-setpill" aria-disabled="{{busy}}" bindtap="toggleSettings" style="width: 168rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx"><text class="me-setpill__icon"></text><text>设置</text></button>
+ </view>
+
+ <!-- 真实状态提示：错误 / 同步失败等 -->
+ <view wx:if="{{error}}" class="me-tip me-tip--warn"><text class="me-tip__text">{{error}}</text></view>
+
+ <!-- ① 身份：游客 / 本地演示 / 微信账号共用同一块骨架 -->
+ <view class="me-card me-identity">
+  <view class="me-identity__head">
+   <image wx:if="{{user.avatarUrl || user.avatarMediaId}}" class="me-avatar" src="{{user.avatarUrl || user.avatarMediaId}}" mode="aspectFill"/>
+   <view wx:else class="me-avatar me-avatar--fallback">旅</view>
+   <view class="me-identity__copy">
+    <text class="me-identity__name">{{user.nickname || '微信用户'}}</text>
+    <text class="me-identity__state">{{account.idLine}}</text>
+   </view>
+   <button wx:if="{{cloud && !editing}}" class="me-btn me-btn--sm me-btn--outline" aria-disabled="{{busy}}" bindtap="editProfile" style="width: 233rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">编辑资料</button>
+  </view>
+
+  <!-- 资料查看 / 编辑两态共用同一张身份卡：只换内容，不换骨架 -->
+  <block wx:if="{{!editing}}">
+   <text class="me-identity__bio">{{account.bioText}}</text>
+
+   <!-- 登录态显示关注 / 粉丝（可点，进本页二级名单）与只读获赞；微信资料未加载完时给「重新加载」 -->
+   <view wx:if="{{account.statsReady}}" class="me-statrow">
+    <button class="me-stat {{relationOpen && relationTab === 'following' ? 'me-stat--on' : ''}}" data-relation="following" bindtap="openRelations">
+     <text class="me-stat__num me-num">{{stats.followingCount || 0}}</text><text class="me-stat__lb">关注</text>
+    </button>
+    <button class="me-stat {{relationOpen && relationTab === 'followers' ? 'me-stat--on' : ''}}" data-relation="followers" bindtap="openRelations">
+     <text class="me-stat__num me-num">{{stats.followerCount || 0}}</text><text class="me-stat__lb">粉丝</text>
+    </button>
+    <view class="me-stat">
+     <text class="me-stat__num me-num">{{stats.likeReceivedCount || 0}}</text><text class="me-stat__lb">获赞</text>
+    </view>
+   </view>
+   <view wx:elif="{{user.kind === 'wechat'}}" class="me-identity__hintrow">
+    <text class="me-identity__hint">关注、粉丝与获赞需要资料加载完成后才能显示。</text>
+    <button class="me-btn me-btn--sm me-btn--outline" loading="{{busy}}" aria-disabled="{{busy}}" bindtap="refreshAccount">重新加载</button>
+   </view>
+
+   <!-- 游客 / 本地演示：本屏唯一的实心绿主操作 -->
+   <button wx:if="{{user.kind !== 'wechat'}}" class="me-btn me-btn--primary me-btn--block me-identity__cta" loading="{{busy}}" aria-disabled="{{busy}}" bindtap="login">登录 / 注册</button>
+  </block>
+
+  <view wx:else class="me-editor">
+   <!-- 资料编辑（头像 / 昵称 / 简介）；保存资料是本屏唯一实心绿主操作 -->
+   <text class="me-editor__hint">头像与昵称由你主动选择，不会自动读取微信资料。</text>
+   <image wx:if="{{avatarDraft}}" class="me-editor__avatar" src="{{avatarDraft}}" mode="aspectFill"/>
+   <button class="me-btn me-btn--sec me-btn--block me-editor__avataract" open-type="chooseAvatar" aria-disabled="{{profileBusy}}" bindchooseavatar="chooseAvatar">选择头像</button>
+   <text class="me-field">昵称</text>
+   <input class="me-inp" type="nickname" maxlength="20" value="{{nicknameDraft}}" placeholder="填写昵称" placeholder-class="me-ph" aria-disabled="{{profileBusy}}" bindinput="nickname"/>
+   <text class="me-field">简介</text>
+   <textarea class="me-inp me-inp--area" maxlength="100" value="{{bioDraft}}" placeholder="你的旅行偏好（选填）" placeholder-class="me-ph" aria-disabled="{{profileBusy}}" bindinput="bio"></textarea>
+   <view class="me-btnrow">
+    <button class="me-btn me-btn--sec" aria-disabled="{{profileBusy}}" bindtap="cancelProfile">取消编辑</button>
+    <button class="me-btn me-btn--primary me-btn--wide" loading="{{profileBusy}}" aria-disabled="{{profileBusy}}" bindtap="saveProfile">保存资料</button>
+   </view>
+  </view>
+ </view>
+
+ <!-- 关注 / 粉丝名单：本页二级 state（产品决策：名单仅自己可见） -->
+ <view wx:if="{{cloud && relationOpen}}" class="me-card me-relation">
+  <view class="me-tabs">
+   <button class="me-tab {{relationTab === 'following' ? 'me-tab--on' : ''}}" data-relation="following" bindtap="openRelations">关注 {{stats.followingCount || 0}}</button>
+   <button class="me-tab {{relationTab === 'followers' ? 'me-tab--on' : ''}}" data-relation="followers" bindtap="openRelations">粉丝 {{stats.followerCount || 0}}</button>
+   <text class="me-tabs__tail">名单仅自己可见</text>
+  </view>
+  <view class="me-rows">
+   <text wx:if="{{relationBusy && !relationItems.length}}" class="me-empty__text">正在加载{{relationTab === 'following' ? '关注' : '粉丝'}}列表…</text>
+   <view wx:if="{{relationError}}" class="me-tip me-tip--warn"><text class="me-tip__text">{{relationError}}</text></view>
+   <text wx:if="{{!relationBusy && !relationError && !relationItems.length}}" class="me-empty__text">{{relationTab === 'following' ? '还没有关注任何人。' : '还没有粉丝。'}}</text>
+   <view wx:for="{{relationItems}}" wx:key="id" class="me-prow" data-id="{{item.targetId}}" bindtap="openMember">
+    <image wx:if="{{item.user.avatarUrl || item.user.avatarMediaId}}" class="me-prow__avatar" src="{{item.user.avatarUrl || item.user.avatarMediaId}}" mode="aspectFill"/>
+    <view wx:else class="me-prow__avatar me-prow__avatar--fallback">旅</view>
+    <view class="me-prow__copy">
+     <text class="me-prow__name">{{item.user.nickname || item.nickname || '微信用户'}}</text>
+     <text class="me-prow__bio">{{item.user.bio || '这个人还没有写简介。'}}</text>
+    </view>
+    <button class="me-btn me-btn--sm {{item.following ? 'me-btn--ghost' : ''}}" data-index="{{index}}" aria-disabled="{{relationActionBusy}}" catchtap="relationAction">{{item.following ? '已关注' : '回关'}}</button>
+   </view>
+   <button wx:if="{{relationHasMore}}" class="me-btn me-btn--sec me-btn--block" loading="{{relationBusy}}" aria-disabled="{{relationBusy}}" bindtap="relationMore">加载更多</button>
+   <text wx:if="{{!relationHasMore && relationItems.length && !relationBusy}}" class="me-empty__text me-empty__text--mid">已经到底了</text>
+  </view>
+ </view>
+
+ <!-- ② 我的旅行：方案 / 行程数量 + 同步状态 + 主次操作 -->
+ <view class="me-card me-travel">
+  <view class="me-head">
+   <text class="me-head__title">我的旅行</text>
+   <text class="me-head__meta">{{travelMeta}}</text>
+  </view>
+  <text class="me-head__note">{{syncText}}</text>
+  <view wx:if="{{syncError}}" class="me-tip me-tip--warn">
+   <text class="me-tip__text">{{syncError}}</text>
+   <button class="me-btn me-btn--sm me-btn--danger" loading="{{busy}}" aria-disabled="{{busy}}" bindtap="refreshAccount">重试同步</button>
+  </view>
+  <view class="me-btnrow">
+   <button class="me-btn {{account.wechat && cloud && !editing ? 'me-btn--primary' : 'me-btn--sec'}} me-btn--wide" bindtap="start">生成旅行方案</button>
+   <button class="me-btn me-btn--sec me-btn--grow" bindtap="trip">查看行程</button>
+  </view>
+ </view>
+
+ <!-- ③ 社区内容：帖子 / 收藏直接可见，通知仍是卡内二级 state -->
+ <view class="me-card me-community">
+  <view wx:if="{{loginSource}}" class="me-tip me-tip--warn"><text class="me-tip__text">来自“{{loginSource}}”的操作未执行；登录后请重新发起。</text></view>
+  <view wx:if="{{!cloud}}" class="me-tip me-tip--grey"><text class="me-tip__text">{{account.wechat ? '云端暂不可用：先在上方「重新加载」，或稍后再试。' : '以下为本机内容；云端收藏与互动需要微信登录。'}}</text></view>
+
+  <view class="me-tabs">
+   <button class="me-tab {{myTab === 'posts' ? 'me-tab--on' : ''}}" data-tab="posts" bindtap="switchTab" style="position: relative; left: 0rpx; top: 0rpx; width: -81rpx; height: -22rpx; display: ; box-sizing:">{{cloud ? '我的帖子' : '本机帖子'}} {{posts.length}}</button>
+   <button wx:if="{{cloud}}" class="me-tab {{myTab === 'favorites' ? 'me-tab--on' : ''}}" data-tab="favorites" bindtap="switchTab" style="position: relative; left: -124rpx; top: 2rpx">收藏 {{favorites.length}}</button>
+   <button wx:if="{{cloud && unreadCount}}" class="me-tabs__tail me-tabs__tail--link" bindtap="toggleNotifications">{{unreadCount}} 条未读</button>
+  </view>
+
+  <view class="me-rows">
+   <text wx:if="{{!activeItems.length}}" class="me-empty__text">{{myTab === 'posts' ? '还没有发布内容。' : '还没有收藏内容。'}}</text>
+   <view wx:for="{{activeItems}}" wx:key="id" class="me-lrow" data-id="{{item.id}}" data-index="{{index}}" bindtap="post">
+    <text class="me-lrow__ico"></text>
+    <view class="me-lrow__copy">
+     <text class="me-lrow__title">{{item.title}}</text>
+     <text class="me-lrow__meta">{{item.metaLine}}</text>
+    </view>
+    <button wx:if="{{myTab === 'favorites'}}" class="me-btn me-btn--sm me-btn--ghost" loading="{{favoriteBusy}}" aria-disabled="{{favoriteBusy}}" data-index="{{index}}" catchtap="removeFavorite">{{item.unavailable ? '移除' : '取消收藏'}}</button>
+    <text wx:else class="me-chev me-chev--right"></text>
+   </view>
+  </view>
+
+  <view class="me-btnrow">
+   <button wx:if="{{cloud && myTab === 'posts'}}" class="me-btn me-btn--sec me-btn--grow" bindtap="compose">发布内容</button>
+   <button class="me-btn me-btn--sec me-btn--grow" bindtap="community">浏览社区</button>
+  </view>
+
+  <view wx:if="{{cloud}}" class="me-sub">
+   <button class="me-head me-head--sub" bindtap="toggleNotifications">
+    <text class="me-head__title me-head__title--sub">互动通知</text>
+    <text class="me-head__meta">{{notificationsOpen ? '收起' : '查看'}} · {{unreadCount}} 条未读</text>
+    <text class="me-chev {{notificationsOpen ? 'me-chev--open' : ''}}"></text>
+   </button>
+   <view wx:if="{{notificationsOpen}}" class="me-rows">
+    <text wx:if="{{!notifications.length}}" class="me-empty__text">暂无互动通知。</text>
+    <button wx:for="{{notifications}}" wx:key="id" class="me-notice {{item.readAt ? '' : 'me-notice--unread'}}" data-index="{{index}}" bindtap="openNotification">
+     <text class="me-notice__state">{{item.readAt ? '已读' : '未读'}}</text>
+     <text class="me-notice__text">{{item.text}}</text>
+    </button>
+    <button wx:if="{{unreadCount}}" class="me-btn me-btn--sec me-btn--block" loading="{{noticeBusy}}" aria-disabled="{{noticeBusy}}" bindtap="markNotifications">全部标为已读</button>
+   </view>
+  </view>
+ </view>
+
+ <!-- ④ 设置与数据说明：右上角「设置」单独打开的抽屉（本页内，不新增路由） -->
+ <view wx:if="{{settingsOpen}}" class="me-mask" bindtap="closeSettings" catchtouchmove="preventMove"></view>
+ <view wx:if="{{settingsOpen}}" class="me-sheet">
+  <view class="me-sheet__grip"></view>
+  <view class="me-sheet__head">
+   <text class="me-sheet__title">设置与数据说明</text>
+   <button class="me-btn me-btn--sm me-btn--ghost" bindtap="closeSettings">关闭</button>
+  </view>
+  <scroll-view scroll-y class="me-sheet__body">
+   <!-- 账号与数据：身份隔离规则 + 退出 -->
+   <!-- 2026-09-18：默认提前量分区已随提醒功能废弃一并下线（后端不再排程，前端不再申请订阅）。 -->
+   <view class="me-block">
+    <text class="me-block__title">账号与数据</text>
+    <text class="me-block__note">{{account.dataNote}}</text>
+    <button wx:if="{{user.kind !== 'guest'}}" class="me-lrow" aria-disabled="{{busy || profileBusy}}" bindtap="logout">
+     <view class="me-lrow__copy">
+      <text class="me-lrow__title me-lrow__title--danger">退出当前账号</text>
+      <text class="me-lrow__meta">退出后回到游客空间；本机缓存保留，不会与游客数据混在一起。</text>
+     </view>
+     <text class="me-chev me-chev--right"></text>
+    </button>
+   </view>
+
+   <!-- 本机历史内容：老帖子逐条预览后重发（低频，故收进设置） -->
+   <view wx:if="{{cloud && legacyPosts.length}}" class="me-block">
+    <text class="me-block__title">本机历史内容</text>
+    <text class="me-block__note">老帖子不会自动公开，可逐条预览后重发到云端，原数据保留。</text>
+    <block wx:for="{{legacyPosts}}" wx:key="id">
+     <view class="me-lrow" data-index="{{index}}" bindtap="previewLegacy">
+      <view class="me-lrow__copy">
+       <text class="me-lrow__title">{{item.post.title}}</text>
+       <text class="me-lrow__meta">{{item.sourceLabel}} · {{item.typeLabel}}{{item.published ? ' · 已发布' : ''}}</text>
+      </view>
+      <button wx:if="{{!item.published}}" class="me-btn me-btn--sm" loading="{{republishBusy}}" aria-disabled="{{republishBusy}}" data-index="{{index}}" catchtap="republishLegacy">重发</button>
+      <text wx:else class="me-tag me-tag--ok">已发布</text>
+     </view>
+     <view wx:if="{{item.open}}" class="me-inset">
+      <text class="me-inset__text">{{item.post.content}}</text>
+      <text wx:if="{{item.placeText}}" class="me-inset__meta">地点：{{item.placeText}}</text>
+      <text wx:if="{{item.photoCount}}" class="me-inset__meta">照片 {{item.photoCount}} 张（重发时逐张上传，失效图片自动跳过）</text>
+     </view>
+    </block>
+   </view>
+
+  </scroll-view>
+ </view>
+</view>

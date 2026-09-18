@@ -1,1 +1,1 @@
-{ "usingComponents": { "navigation-bar": "/components/navigation-bar/navigation-bar" }, "disableScroll": true }
+{"navigationBarTitleText":"我的行程","navigationStyle":"default","renderer":"webview","usingComponents":{}}

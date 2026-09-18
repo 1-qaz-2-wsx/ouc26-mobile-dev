@@ -1,0 +1,211 @@
+<!-- G7 · 帖子详情（Post detail）
+     信息层级：作者 → 正文 → 路线/地点引用 → 图片 → 互动 → 评论 → 回复输入。
+     举报是低频二级动作，只在页尾以文字动作出现，不做成主 CTA。 -->
+<view class="pd-page">
+
+ <view wx:if="{{error}}" class="pd-err">
+  <view class="pd-err__copy">
+   <text class="pd-err__title">内容没能打开</text>
+   <text class="pd-err__text">{{error}}</text>
+  </view>
+  <button wx:if="{{!post}}" class="pd-err__go" bindtap="retry">重试</button>
+ </view>
+
+ <!-- 加载骨架 -->
+ <view wx:if="{{loading}}" class="pd-card pd-card--skel">
+  <view class="pd-skel pd-skel--avatar"></view>
+  <view class="pd-skel pd-skel--title"></view>
+  <view class="pd-skel pd-skel--line"></view>
+  <view class="pd-skel pd-skel--line"></view>
+  <view class="pd-skel pd-skel--block"></view>
+ </view>
+
+ <block wx:if="{{post && !loading}}">
+
+  <!-- 1 作者 -->
+  <view class="pd-card pd-author">
+   <view class="pd-author__row" bindtap="openAuthor">
+    <image wx:if="{{author.avatarUrl || author.avatarMediaId}}" class="pd-avatar" src="{{author.avatarUrl || author.avatarMediaId}}" mode="aspectFill"/>
+    <view wx:else class="pd-avatar pd-avatar--fallback">旅</view>
+    <view class="pd-author__copy">
+     <text class="pd-author__name">{{author.nickname || post.authorName || '微信用户'}}</text>
+     <text class="pd-author__meta">{{typeLabel}}{{publishedText ? ' · ' + publishedText : ''}}</text>
+    </view>
+    <text wx:if="{{author.id}}" class="pd-chev"></text>
+   </view>
+   <button wx:if="{{cloud && !owned}}" class="pd-follow {{viewerFollowing ? 'pd-follow--on' : ''}}" loading="{{followBusy}}" aria-disabled="{{followBusy}}" catchtap="follow">{{viewerFollowing ? '已关注' : '关注'}}</button>
+  </view>
+
+  <!-- 2 正文 -->
+  <view class="pd-card pd-body">
+   <view class="pd-body__facts">
+    <text class="pd-tag">{{typeLabel}}</text>
+    <text wx:if="{{post.visibility === 'private'}}" class="pd-tag pd-tag--warn">仅自己可见</text>
+    <text wx:if="{{placeText}}" class="pd-place"><text class="pd-place__icon"></text>{{placeText}}</text>
+   </view>
+   <text class="pd-title">{{post.title}}</text>
+   <view wx:if="{{owned && post.moderationStatus === 'pending'}}" class="pd-note pd-note--warn">正在审核；重新提交审核前其他用户不可见。</view>
+   <view wx:if="{{owned && post.moderationStatus === 'rejected'}}" class="pd-note pd-note--danger">审核未通过{{post.moderationReason ? '：' + post.moderationReason : ''}}，请修改后重新提交。</view>
+   <text class="pd-content">{{post.content}}</text>
+   <view wx:if="{{post.rating}}" class="pd-inset">推荐程度 {{post.rating}} / 5{{post.duration ? ' · 建议游玩 ' + post.duration : ''}}</view>
+  </view>
+
+  <!-- 3 路线 / 地点引用 -->
+  <view wx:if="{{post.plan}}" class="pd-card">
+   <text class="pd-card__title">公开路线快照</text>
+   <view class="pd-stops">
+    <view wx:for="{{post.plan.stops}}" wx:key="id" class="pd-stop">
+     <text class="pd-stop__no">{{index + 1}}</text>
+     <view class="pd-stop__copy">
+      <text class="pd-stop__name">{{item.name}}</text>
+      <text class="pd-stop__role">{{item.planningRole === 'destination_area' ? '城市目的地' : (item.category || '具体地点')}}</text>
+     </view>
+    </view>
+   </view>
+   <view wx:if="{{post.plan.items.length}}" class="pd-items">
+    <view wx:for="{{post.plan.items}}" wx:key="id" class="pd-item">{{item.date}} · {{item.start}} · {{item.title}}</view>
+   </view>
+  </view>
+
+  <view wx:if="{{post.places && post.places.length}}" class="pd-card">
+   <text class="pd-card__title">关联地点</text>
+   <view class="pd-places">
+    <view wx:for="{{post.places}}" wx:key="id" class="pd-placerow" data-place-id="{{item.id}}" bindtap="openPlace">
+     <view class="pd-placerow__copy">
+      <text class="pd-placerow__name">{{item.name}}</text>
+      <text wx:if="{{item.category}}" class="pd-placerow__cat">{{item.category}}</text>
+     </view>
+     <text class="pd-chev"></text>
+    </view>
+   </view>
+  </view>
+
+  <!-- 4 图片 -->
+  <view wx:if="{{post.photos && post.photos.length}}" class="pd-card">
+   <view class="pd-photos pd-photos--{{photoLayout}}">
+    <image wx:for="{{post.photos}}" wx:key="*this" class="pd-photos__item" src="{{item}}" mode="aspectFill" lazy-load data-index="{{index}}" bindtap="previewPhoto"/>
+   </view>
+  </view>
+
+  <!-- 5 互动：次级动作，不做成一排实体按钮 -->
+  <view class="pd-card pd-actions">
+   <button wx:if="{{cloud}}" class="pd-act {{viewerLiked ? 'pd-act--on' : ''}}" loading="{{actionBusy}}" aria-disabled="{{actionBusy}}" bindtap="like">
+    <text class="pd-act__icon pd-act__icon--like"></text>{{post.likeCount || 0}}
+   </button>
+   <button wx:if="{{cloud}}" class="pd-act {{viewerFavorited ? 'pd-act--on' : ''}}" loading="{{actionBusy}}" aria-disabled="{{actionBusy}}" bindtap="favorite">
+    <text class="pd-act__icon pd-act__icon--book"></text>{{post.favoriteCount || 0}}
+   </button>
+   <text class="pd-actions__cmt"><text class="pd-act__icon pd-act__icon--cmt"></text>评论 {{post.commentCount || 0}}</text>
+   <button wx:if="{{post.visibility === 'public' && (post.moderationStatus === 'approved' || post.moderationStatus === 'not_required')}}" class="pd-act" open-type="share">
+    <text class="pd-act__icon pd-act__icon--share"></text>分享
+   </button>
+  </view>
+
+  <!-- 6 路线帖子：加入菜单参考（原有能力，保持二级动作） -->
+  <view wx:if="{{post.type === 'route' && (post.routeSnapshot || post.plan)}}" class="pd-card pd-ref">
+   <text class="pd-card__title">作为旅行规划参考</text>
+   <text class="pd-ref__text">把这篇路线的已确认地点加入菜单，不会覆盖已有方案。</text>
+   <button wx:if="{{!referencePreview}}" class="pd-btn pd-btn--sec" bindtap="reference">导入参考路线地点</button>
+   <view wx:if="{{referencePreview}}" class="pd-ref__preview">
+    <text class="pd-ref__ptitle">导入参考路线地点</text>
+    <text class="pd-ref__ptext">将按稳定地点 ID 去重，最多导入 12 个地点；不会覆盖已有方案。</text>
+    <view wx:for="{{referencePreview.stops}}" wx:key="id" class="pd-ref__prow">
+     <text class="pd-ref__pname">{{item.name}}</text>
+     <text class="pd-ref__prole">{{item.planningRole === 'destination_area' ? '城市目的地' : (item.category || '具体地点')}}</text>
+    </view>
+    <view wx:if="{{referencePreview.skipped.length}}" class="pd-note pd-note--warn">另有 {{referencePreview.skipped.length}} 个地点未导入：{{referencePreview.skipped[0].reason}}{{referencePreview.skippedMore ? '等' : ''}}</view>
+    <view wx:if="{{referenceError}}" class="pd-note pd-note--danger">{{referenceError}}</view>
+    <view class="pd-ref__actions">
+     <button class="pd-btn pd-btn--quiet" bindtap="cancelReference" aria-disabled="{{referenceBusy}}">取消</button>
+     <button class="pd-btn pd-btn--primary" bindtap="confirmReference" loading="{{referenceBusy}}" aria-disabled="{{referenceBusy || !referencePreview.stops.length}}">确认加入菜单</button>
+    </view>
+   </view>
+   <view wx:if="{{referenceError && !referencePreview}}" class="pd-note pd-note--danger">{{referenceError}}</view>
+  </view>
+
+  <!-- 7 作者操作：编辑 / 隐藏 / 删除，均为二级动作 -->
+  <view wx:if="{{owned}}" class="pd-card">
+   <text class="pd-card__title">作者操作</text>
+   <view class="pd-owner">
+    <button class="pd-btn pd-btn--quiet" bindtap="edit">编辑</button>
+    <button class="pd-btn pd-btn--quiet" loading="{{actionBusy}}" aria-disabled="{{actionBusy}}" bindtap="visibility">{{post.visibility === 'public' ? '隐藏帖子' : '重新公开'}}</button>
+    <button class="pd-btn pd-btn--danger" loading="{{actionBusy}}" aria-disabled="{{actionBusy}}" bindtap="remove">删除</button>
+   </view>
+  </view>
+
+  <!-- 8 评论（两级语义：根评论 + 回复） -->
+  <view class="pd-card pd-cmts">
+   <view class="pd-cmts__head">
+    <text class="pd-card__title">评论</text>
+    <text class="pd-cmts__count">{{post.commentCount || 0}}</text>
+   </view>
+
+   <text wx:if="{{commentsLoading}}" class="pd-cmts__state">正在加载评论…</text>
+   <view wx:if="{{commentsError}}" class="pd-note pd-note--danger">
+    <text class="pd-note__text">{{commentsError}}</text>
+    <button class="pd-note__go" bindtap="retryComments">重新加载</button>
+   </view>
+   <text wx:if="{{!commentsLoading && !commentsError && !comments.length}}" class="pd-cmts__state">还没有评论，来写第一条吧。</text>
+
+   <view wx:for="{{comments}}" wx:key="id" class="pd-cmt {{item.rootId ? 'pd-cmt--reply' : ''}} {{item.deletedAt ? 'pd-cmt--gone' : ''}}">
+    <view class="pd-cmt__head">
+     <image wx:if="{{item.authorAvatar}}" class="pd-cmt__avatar" src="{{item.authorAvatar}}" mode="aspectFill" lazy-load/>
+     <view wx:else class="pd-cmt__avatar pd-cmt__avatar--fallback">旅</view>
+     <view class="pd-cmt__who">
+      <text class="pd-cmt__name">{{item.authorName}}</text>
+      <text wx:if="{{item.replyToUserName}}" class="pd-cmt__to">回复 @{{item.replyToUserName}}</text>
+     </view>
+     <text class="pd-cmt__time">{{item.publishedText}}</text>
+    </view>
+    <text class="pd-cmt__text">{{item.content}}</text>
+    <view class="pd-cmt__foot">
+     <text wx:if="{{item.statusText}}" class="pd-tag pd-tag--warn">{{item.statusText}}</text>
+     <button wx:if="{{item.canReply}}" class="pd-link" data-index="{{index}}" bindtap="reply">回复</button>
+     <button wx:if="{{item.canDelete}}" class="pd-link pd-link--danger" data-index="{{index}}" bindtap="removeComment">删除</button>
+     <button wx:if="{{cloud && !item.deletedAt}}" class="pd-link" data-index="{{index}}" bindtap="openReport">举报</button>
+    </view>
+   </view>
+
+   <button wx:if="{{commentsHasMore}}" class="pd-btn pd-btn--quiet pd-btn--block" loading="{{commentsLoadingMore}}" aria-disabled="{{commentsLoadingMore}}" bindtap="loadMoreComments">加载更多评论</button>
+
+   <!-- 9 回复输入 -->
+   <view wx:if="{{replyTarget}}" class="pd-replying">
+    <text class="pd-replying__text">回复 @{{replyTarget.name}}</text>
+    <button class="pd-link" catchtap="cancelReply">取消</button>
+   </view>
+   <textarea class="pd-textarea" value="{{commentDraft}}" maxlength="1000" bindinput="field" placeholder="说说你的体验（1–1000字）"/>
+   <!-- 一屏一个实心绿主 CTA：参考路线预览打开时，主操作变成「确认加入菜单」 -->
+   <button class="pd-btn pd-btn--block {{referencePreview ? 'pd-btn--quiet' : 'pd-btn--primary'}}" loading="{{commentBusy}}" aria-disabled="{{commentBusy}}" bindtap="submitComment">{{replyTarget ? '提交回复' : '提交评论'}}</button>
+   <text class="pd-cmts__hint">{{cloud ? '评论公开可见；删除自己的评论后会保留占位。' : '本机演示的评论只保存在当前设备。'}}</text>
+  </view>
+
+  <!-- 10 举报：低频二级动作 -->
+  <view wx:if="{{cloud && !owned}}" class="pd-reportrow">
+   <button class="pd-link pd-link--danger" bindtap="openReport" data-target-type="post" data-target-id="{{post.id}}">举报内容</button>
+  </view>
+
+ </block>
+
+ <!-- 举报半屏抽屉（保留原有 picker + requestKey 契约，仅重做外观） -->
+ <view wx:if="{{reportOpen}}" class="pd-mask" bindtap="closeReport">
+  <view class="pd-sheet" catchtap="noop">
+   <view class="pd-sheet__grip"></view>
+   <text class="pd-sheet__title">举报{{reportTarget.label}}</text>
+   <text class="pd-sheet__sub">举报会提交给内容审核处理。</text>
+   <picker class="pd-field" range="{{reportReasons}}" value="{{reportReasonIndex}}" bindchange="reportReason">
+    <view class="pd-selector">
+     <text class="pd-selector__label">原因</text>
+     <text class="pd-selector__value">{{reportReasons[reportReasonIndex]}}</text>
+     <text class="pd-chev"></text>
+    </view>
+   </picker>
+   <textarea class="pd-textarea pd-textarea--short" value="{{reportDetails}}" maxlength="500" bindinput="reportField" placeholder="补充说明（选填）"/>
+   <view wx:if="{{reportError}}" class="pd-note pd-note--danger">{{reportError}}</view>
+   <view class="pd-sheet__actions">
+    <button class="pd-btn pd-btn--quiet" bindtap="closeReport" aria-disabled="{{reportBusy}}">取消</button>
+    <button class="pd-btn pd-btn--danger-solid" bindtap="submitReport" loading="{{reportBusy}}" aria-disabled="{{reportBusy}}">提交举报</button>
+   </view>
+  </view>
+ </view>
+
+</view>

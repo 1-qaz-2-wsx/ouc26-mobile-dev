@@ -1,0 +1,291 @@
+/* ==========================================================================
+   G7 · Community UI v1 —— 成员主页（本页前缀 mem-）
+   共享规格见 pages/community/community.wxss 顶部注释（四页一致，不新造主题）。
+   ⚠️ 本页已完全移除对 legacy 基线 styles/mvp.wxss 的 @import，按钮/输入框默认值需自行复位。
+   边界：关注/粉丝只显示数字（无名单入口）；只展示 public 帖子；不新增私信/推荐等能力。
+   ========================================================================== */
+
+page {
+  background: #f1f2ed;
+  color: #141414;
+}
+
+.mem-page {
+  min-height: 100vh;
+  padding: 24rpx 30rpx calc(60rpx + env(safe-area-inset-bottom));
+  background: #f1f2ed;
+  color: #141414;
+  font-size: 26rpx;
+  line-height: 38rpx;
+}
+
+.mem-page button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: center;
+}
+.mem-page button::after { border: 0; display: none; }
+/* busy 态用 aria-disabled：微信内置 button[disabled]:not([type]) 特异度 (0,2,1)
+   会压过页面组件类 (0,2,0)；交互拦截由 JS 的 busy 守卫负责。 */
+.mem-page button[aria-disabled="true"] { opacity: .55; }
+.mem-page image { display: block; }
+
+/* --------------------------------------------------------------------------
+   错误条 / 加载骨架
+   -------------------------------------------------------------------------- */
+.mem-err {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 24rpx;
+  border-left: 3px solid #b3261e;
+  border-radius: 27rpx;
+  background: #fdf0ee;
+}
+.mem-err__copy { flex: 1; min-width: 0; }
+.mem-err__title { display: block; color: #b3261e; font-size: 25rpx; line-height: 36rpx; font-weight: 600; }
+.mem-err__text { display: block; margin-top: 4rpx; color: #b3261e; font-size: 23rpx; line-height: 34rpx; opacity: .85; }
+.mem-page .mem-err__go {
+  flex: none;
+  height: 62rpx;
+  margin-left: 20rpx;
+  padding: 0 24rpx;
+  border: 1px solid #b3261e;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #b3261e;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  font-weight: 600;
+}
+
+.mem-card {
+  padding: 34rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.mem-card--skel { display: flex; flex-direction: column; }
+.mem-skel { border-radius: 8rpx; background: #f7f7f7; }
+.mem-skel--avatar { width: 138rpx; height: 138rpx; border-radius: 50%; }
+.mem-skel--name { width: 44%; height: 34rpx; margin-top: 30rpx; }
+.mem-skel--line { width: 76%; height: 26rpx; margin-top: 20rpx; }
+.mem-skel--block { width: 100%; height: 92rpx; margin-top: 30rpx; border-radius: 999rpx; }
+
+/* --------------------------------------------------------------------------
+   身份卡
+   -------------------------------------------------------------------------- */
+.mem-profile { margin-top: 24rpx; }
+.mem-profile__head { display: flex; align-items: center; }
+.mem-avatar {
+  width: 138rpx;
+  height: 138rpx;
+  flex: none;
+  border-radius: 50%;
+  background: #f7f7f7;
+}
+.mem-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8f2ec;
+  color: #00754a;
+  font-size: 48rpx;
+  line-height: 48rpx;
+  font-weight: 500;
+}
+.mem-profile__copy { flex: 1; min-width: 0; margin-left: 28rpx; }
+.mem-profile__name {
+  display: block;
+  color: #141414;
+  font-size: 38rpx;
+  line-height: 52rpx;
+  font-weight: 700;
+  overflow-wrap: break-word;
+}
+.mem-profile__bio {
+  display: block;
+  margin-top: 8rpx;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  overflow-wrap: break-word;
+}
+.mem-profile__action {
+  display: flex;
+  align-items: center;
+  margin-top: 26rpx;
+}
+.mem-profile__hint { color: #767676; font-size: 24rpx; line-height: 34rpx; }
+
+/* 关注 = 本页唯一实心绿主 CTA；已关注降级为描边次要按钮 */
+.mem-page .mem-follow {
+  flex: none;
+  white-space: nowrap;
+  height: 92rpx;
+  min-width: 260rpx;
+  padding: 0 48rpx;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 28rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+}
+.mem-page .mem-follow--on {
+  border: 1px solid #9cc3b0;
+  background: #ffffff;
+  color: #00754a;
+}
+.mem-self {
+  height: 58rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: #e8f2ec;
+  color: #00754a;
+  font-size: 24rpx;
+  line-height: 58rpx;
+  font-weight: 600;
+}
+
+.mem-stats { display: flex; align-items: flex-start; margin-top: 30rpx; }
+.mem-stat { display: flex; align-items: flex-start; flex: none; white-space: nowrap; margin-right: 60rpx; }
+.mem-stat:last-child { margin-right: 0; }
+.mem-stat__num { color: #141414; font-size: 42rpx; line-height: 42rpx; font-weight: 700; }
+.mem-stat__label { margin-left: 8rpx; color: #767676; font-size: 24rpx; line-height: 24rpx; }
+.mem-stats__note {
+  display: block;
+  margin-top: 20rpx;
+  color: #9a9a9a;
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+
+/* --------------------------------------------------------------------------
+   公开内容
+   -------------------------------------------------------------------------- */
+.mem-section { margin-top: 46rpx; }
+.mem-section__head { display: flex; align-items: baseline; margin: 0 2rpx; }
+.mem-section__title { color: #141414; font-size: 30rpx; line-height: 42rpx; font-weight: 700; }
+.mem-section__meta { margin-left: auto; color: #767676; font-size: 24rpx; line-height: 34rpx; }
+
+.mem-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 60rpx 34rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.mem-empty__icon {
+  width: 119rpx;
+  height: 119rpx;
+  border-radius: 27rpx;
+  background-color: #f7f7f7;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 54rpx 54rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239A9A9A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.6 5.4h14.8v10.2H9.2L5.8 19v-3.4H4.6z'/%3E%3Cpath d='M8.4 9.4h7.2M8.4 12.4h4.6'/%3E%3C/svg%3E");
+}
+.mem-empty__title { margin-top: 26rpx; color: #141414; font-size: 33rpx; line-height: 46rpx; font-weight: 700; }
+.mem-empty__text { margin-top: 12rpx; color: #767676; font-size: 24rpx; line-height: 38rpx; }
+
+.mem-list { margin-top: 24rpx; padding: 8rpx 34rpx; }
+.mem-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+.mem-row:last-child { border-bottom: 0; }
+.mem-row__thumb {
+  width: 140rpx;
+  height: 140rpx;
+  flex: none;
+  margin-right: 24rpx;
+  border-radius: 27rpx;
+  background: #e9ebe3;
+}
+.mem-row__copy { flex: 1; min-width: 0; }
+.mem-row__title {
+  display: block;
+  color: #141414;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.mem-row__facts { display: flex; align-items: center; flex-wrap: wrap; margin-top: 12rpx; }
+.mem-tag {
+  flex: none;
+  height: 44rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  color: #4a4a4a;
+  font-size: 22rpx;
+  line-height: 44rpx;
+}
+.mem-place {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: 14rpx;
+  color: #767676;
+  font-size: 23rpx;
+  line-height: 32rpx;
+}
+.mem-place__icon {
+  width: 24rpx;
+  height: 24rpx;
+  flex: none;
+  margin-right: 8rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 24rpx 24rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21.2s6.6-6.2 6.6-10.6a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21.2 12 21.2z'/%3E%3Ccircle cx='12' cy='10.6' r='2.4'/%3E%3C/svg%3E");
+}
+.mem-row__counts { display: block; margin-top: 10rpx; color: #767676; font-size: 23rpx; line-height: 32rpx; }
+.mem-chev {
+  width: 24rpx;
+  height: 24rpx;
+  flex: none;
+  margin-left: 18rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 24rpx 24rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239A9A9A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.8 6.8 15 12l-5.2 5.2'/%3E%3C/svg%3E");
+}
+
+.mem-page .mem-btn {
+  height: 85rpx;
+  padding: 0 30rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  line-height: 34rpx;
+  font-weight: 600;
+}
+.mem-page .mem-btn--sec {
+  border: 1px solid #9cc3b0;
+  background: #ffffff;
+  color: #00754a;
+}
+.mem-page .mem-btn--block { width: 100%; margin-top: 24rpx; }
+.mem-foot {
+  display: block;
+  margin-top: 22rpx;
+  text-align: center;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}

@@ -1,0 +1,299 @@
+/* 旅行方案（2026-09-18 Owner 定稿版）
+   令牌：品牌绿 #00754A / 浅绿面 #E8F2EC / 深墨绿 #1E3932 / 描边绿 #9CC3B0
+        金 #D39E40 / 奶油底 #FBF4EC / 金文 #8A4C13
+         页底 #F1F2ED / 卡面 #FFFFFF / 墨 #141414 / 次文 #4A4A4A / 说明 #767676 / 线 #E5E5E5
+   画布 390px → rpx ×1.923。普通卡片不加投影；一屏最多一个实心绿主操作。 */
+.pd-page {
+  min-height: 100vh;
+  padding: 24rpx 30rpx 320rpx;
+  background: #f1f2ed;
+  box-sizing: border-box;
+}
+.pd-err {
+  margin-bottom: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  background: #fdf0ee;
+  color: #b3261e;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+.pd-err:empty { display: none; }
+
+/* ===== 页面标题 ===== */
+.pd-head { padding: 6rpx 0 22rpx; }
+.pd-title { color: #141414; font-size: 36rpx; font-weight: 600; }
+
+/* ===== 方案条件 ===== */
+.pd-card {
+  border-radius: 38rpx;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+.pd-cond { padding: 12rpx 30rpx; }
+.pd-cond-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+}
+.pd-cond-ico {
+  position: relative;
+  flex: 0 0 auto;
+  width: 62rpx;
+  height: 62rpx;
+  margin-right: 20rpx;
+  border-radius: 22rpx;
+  background: #e8f2ec;
+}
+.pd-glyph {
+  position: absolute;
+  left: 16rpx;
+  top: 16rpx;
+  width: 30rpx;
+  height: 30rpx;
+  border: 3rpx solid #00754a;
+  box-sizing: border-box;
+}
+/* 日历 / 钱币两个线性图标：纯 CSS，不引入图标字体与外部资源 */
+.pd-glyph-cal { border-radius: 8rpx; }
+.pd-glyph-cal::after {
+  content: '';
+  position: absolute;
+  left: -3rpx;
+  right: -3rpx;
+  top: 6rpx;
+  height: 3rpx;
+  background: #00754a;
+}
+.pd-glyph-money { border-radius: 50%; }
+.pd-glyph-money::after {
+  content: '';
+  position: absolute;
+  left: 12rpx;
+  top: 4rpx;
+  width: 4rpx;
+  height: 16rpx;
+  background: #00754a;
+}
+.pd-cond-lb { color: #4a4a4a; font-size: 26rpx; }
+.pd-cond-v {
+  flex: 1;
+  min-width: 0;
+  margin-left: 16rpx;
+  color: #141414;
+  font-size: 26rpx;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ===== blocked 提示（唯一允许出现的服务端状态提示） ===== */
+.pd-blocked {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  background: #fdf0ee;
+  color: #b3261e;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+/* ===== 路线示意 ===== */
+.pd-map {
+  display: block;
+  width: 100%;
+  height: 330rpx;
+  margin-top: 24rpx;
+  border-radius: 38rpx;
+  background: #e6e7eb;
+}
+.pd-map-off {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #767676;
+  font-size: 24rpx;
+  padding: 0 40rpx;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* ===== 按天时间轴 ===== */
+.pd-day { position: relative; margin-top: 34rpx; padding-left: 40rpx; }
+.pd-day-rail {
+  position: absolute;
+  left: 8rpx;
+  top: 18rpx;
+  bottom: 10rpx;
+  width: 2rpx;
+  background: #e5e5e5;
+}
+.pd-day-dot {
+  position: absolute;
+  left: 0;
+  top: 12rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: #00754a;
+}
+.pd-day-hd { display: flex; align-items: baseline; padding: 4rpx 0 16rpx; }
+.pd-day-t { color: #141414; font-size: 29rpx; font-weight: 600; }
+.pd-day-d { margin-left: 14rpx; color: #767676; font-size: 24rpx; }
+
+/* 三种内容语法：住宿=浅绿面/深墨绿；地点=白底/绿描边；交通=奶油底/金描边 */
+.pd-card {
+  position: relative;
+  margin-bottom: 20rpx;
+  padding: 26rpx 30rpx;
+  border: 1px solid transparent;
+}
+.pd-card-dot {
+  position: absolute;
+  left: -37rpx;
+  top: 40rpx;
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #00754a;
+}
+.pd-card-on { border-color: #00754a; }
+.pd-card-lodging { background: #e8f2ec; border-color: #9cc3b0; }
+.pd-card-lodging .pd-card-dot { background: #1e3932; }
+.pd-card-leg { background: #fbf4ec; border-color: #d39e40; }
+.pd-card-leg .pd-card-dot { background: #ffffff; border: 3rpx solid #d39e40; }
+.pd-card-place { background: #ffffff; border-color: #9cc3b0; }
+.pd-card-unresolved { background: #ffffff; border-color: #e5e5e5; }
+.pd-card-unresolved .pd-card-dot { background: #9a9a9a; }
+
+.pd-row-t { display: block; color: #141414; font-size: 28rpx; font-weight: 600; }
+.pd-card-lodging .pd-row-t { color: #1e3932; }
+.pd-card-leg .pd-row-t { color: #8a4c13; }
+.pd-row-l2 { display: block; margin-top: 10rpx; color: #4a4a4a; font-size: 24rpx; line-height: 1.5; }
+.pd-row-l3 { display: block; margin-top: 6rpx; color: #141414; font-size: 24rpx; font-weight: 500; }
+.pd-card-leg .pd-row-l3 { color: #8a4c13; }
+.pd-row-blocked { display: block; margin-top: 10rpx; color: #b3261e; font-size: 23rpx; line-height: 1.5; }
+
+.pd-row-ft {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18rpx;
+  min-height: 56rpx;
+}
+.pd-more {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #00754a;
+  font-size: 24rpx;
+  line-height: 56rpx;
+  text-align: left;
+}
+.pd-more::after { border: 0; }
+.pd-more-off { color: transparent; }
+.pd-sup {
+  margin: 0;
+  padding: 0 26rpx;
+  height: 56rpx;
+  border: 1px solid #00754a;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 23rpx;
+  line-height: 54rpx;
+  font-weight: 500;
+}
+.pd-sup::after { border: 0; }
+.pd-sup-on { border-color: #9cc3b0; background: #e8f2ec; color: #00754a; }
+
+/* 展开详情：facts / 住宿候选 / 下一步动作 */
+.pd-detail { margin-top: 16rpx; padding-top: 16rpx; border-top: 1px solid rgba(20, 20, 20, 0.08); }
+.pd-kv { display: flex; align-items: flex-start; padding: 8rpx 0; }
+.pd-kv-l { flex: 0 0 150rpx; color: #767676; font-size: 23rpx; }
+.pd-kv-v { flex: 1; min-width: 0; color: #141414; font-size: 23rpx; line-height: 1.5; }
+.pd-opts { margin-top: 12rpx; padding: 16rpx 18rpx; border-radius: 24rpx; background: rgba(255, 255, 255, 0.7); }
+.pd-opts-t { display: block; color: #4a4a4a; font-size: 23rpx; font-weight: 500; }
+.pd-opts-x { display: block; margin-top: 6rpx; color: #767676; font-size: 21rpx; line-height: 1.5; }
+.pd-opt { margin-top: 12rpx; }
+.pd-opt-n { display: block; color: #141414; font-size: 23rpx; }
+.pd-opt-m { display: block; margin-top: 4rpx; color: #767676; font-size: 21rpx; }
+.pd-action { display: block; margin-top: 10rpx; color: #00754a; font-size: 23rpx; line-height: 1.5; }
+
+/* 当天没有可执行活动时的明确说明（城市锚点不算活动） */
+.pd-none {
+  margin-bottom: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  background: #f7f7f7;
+  color: #767676;
+  font-size: 23rpx;
+  line-height: 1.5;
+}
+
+/* ===== 空态 ===== */
+.pd-empty {
+  margin-top: 120rpx;
+  padding: 0 40rpx;
+  text-align: center;
+}
+.pd-empty-t { display: block; color: #141414; font-size: 30rpx; font-weight: 600; }
+.pd-empty-p { display: block; margin-top: 14rpx; color: #767676; font-size: 24rpx; line-height: 1.6; }
+
+/* ===== 底部固定操作 ===== */
+.pd-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  padding: 20rpx 30rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: #f1f2ed;
+}
+.pd-bar-row { display: flex; align-items: center; }
+.pd-btn-sec {
+  flex: 0 0 220rpx;
+  margin: 0 20rpx 0 0;
+  padding: 0;
+  height: 88rpx;
+  border: 1px solid #9cc3b0;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #00754a;
+  font-size: 27rpx;
+  font-weight: 500;
+  line-height: 86rpx;
+}
+.pd-btn-sec::after { border: 0; }
+.pd-btn {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  height: 88rpx;
+  border: 0;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 500;
+  line-height: 88rpx;
+}
+.pd-btn::after { border: 0; }
+.pd-btn[disabled] { background: #a8c5b8; color: #ffffff; }
+.pd-bar-note {
+  display: block;
+  margin-top: 14rpx;
+  color: #767676;
+  font-size: 21rpx;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* 交互态：与全局 hv-* 同名，但本页不 import mvp.wxss，需自带最小实现 */
+.hv-flat { opacity: 0.7; }
+.hv-dark { opacity: 0.88; }
+
+@media (orientation: landscape) {
+  .pd-page { padding-left: 60rpx; padding-right: 60rpx; }
+  .pd-bar { padding-left: 60rpx; padding-right: 60rpx; }
+}

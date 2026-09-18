@@ -1,0 +1,6 @@
+{
+  "envId": "cloud1-d3g8eu6faa3e4bee6",
+  "cloudrun": {
+    "name": "travel-assistant-api"
+  }
+}

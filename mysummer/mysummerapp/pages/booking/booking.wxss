@@ -1,0 +1,165 @@
+/* 补充信息（2026-09-18 Owner 定稿版）
+
+   产品边界：这是「我的出行信息记录」，不是支付页、不是 OTA 下单流程。
+   没有收银台样式、没有第三方跳转、没有房价/库存/可订状态。
+   令牌：品牌绿 #00754A / 浅绿面 #E8F2EC / 描边绿 #9CC3B0 / 页底 #F1F2ED
+         墨 #141414 / 次文 #4A4A4A / 说明 #767676 / 线 #E5E5E5 / 危险 #B3261E
+   换算：390px 画布 → 750rpx（×1.923）。类名统一 bk- 前缀；本页不 import styles/mvp.wxss。 */
+page {
+  background: #f1f2ed;
+  color: #141414;
+}
+
+/* ---------- 元素复位：内置 button 的灰底 / ::after 边框必须清掉 ---------- */
+.bk-page,
+.bk-bar { box-sizing: border-box; }
+
+.bk-page button,
+.bk-bar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: center;
+}
+
+.bk-page button::after,
+.bk-bar button::after {
+  border: 0;
+  display: none;
+}
+
+.bk-page input {
+  box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: #141414;
+  font-size: inherit;
+}
+
+.bk-page { padding: 24rpx 30rpx calc(230rpx + env(safe-area-inset-bottom)); }
+
+/* ---------- 错误条 ---------- */
+.bk-err {
+  margin-bottom: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 24rpx;
+  background: #fdf0ee;
+  color: #b3261e;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+.bk-err:empty { display: none; }
+
+/* ---------- 页头 ---------- */
+.bk-head { padding: 6rpx 0 22rpx; }
+.bk-title { display: block; color: #141414; font-size: 36rpx; font-weight: 600; }
+.bk-sub { display: block; margin-top: 12rpx; color: #767676; font-size: 23rpx; line-height: 1.6; }
+
+/* ---------- 卡片 ---------- */
+.bk-card {
+  margin-bottom: 23rpx;
+  padding: 30rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.bk-card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10rpx;
+}
+.bk-card-t { color: #141414; font-size: 29rpx; font-weight: 600; }
+.bk-card-x { color: #767676; font-size: 23rpx; }
+.bk-chip {
+  padding: 0 20rpx;
+  height: 48rpx;
+  border-radius: 999rpx;
+  background: #e8f2ec;
+  color: #00754a;
+  font-size: 22rpx;
+  line-height: 48rpx;
+}
+
+/* ---------- 表单行 ---------- */
+.bk-row { display: flex; align-items: center; padding: 12rpx 0; }
+.bk-lb { flex: 0 0 200rpx; color: #4a4a4a; font-size: 25rpx; }
+.bk-page .bk-inp {
+  flex: 1;
+  min-width: 0;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border-radius: 24rpx;
+  background: #f7f7f7;
+  color: #141414;
+  font-size: 25rpx;
+}
+.bk-pick { display: flex; align-items: center; }
+.bk-ph { color: #9a9a9a; }
+
+/* ---------- 只读对照 ---------- */
+.bk-kv { display: flex; align-items: center; padding: 12rpx 0; }
+.bk-kv-l { flex: 0 0 200rpx; color: #767676; font-size: 24rpx; }
+.bk-kv-v { flex: 1; min-width: 0; color: #141414; font-size: 24rpx; text-align: right; }
+
+/* ---------- 提示条 ---------- */
+.bk-tip {
+  padding: 22rpx 26rpx;
+  border-radius: 24rpx;
+  background: #f7f7f7;
+  color: #767676;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+/* ---------- 空态 ---------- */
+.bk-empty { margin-top: 100rpx; padding: 0 40rpx; text-align: center; }
+.bk-empty-t { display: block; color: #141414; font-size: 30rpx; font-weight: 600; }
+.bk-empty-p { display: block; margin-top: 14rpx; color: #767676; font-size: 24rpx; line-height: 1.6; }
+
+/* ---------- 底部固定操作：一屏只有一个实心绿主操作 ---------- */
+.bk-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: #f1f2ed;
+}
+.bk-bar .bk-btn {
+  flex: 1;
+  height: 88rpx;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+.bk-bar .bk-btn-block { flex: 1; }
+.bk-bar .bk-btn-sec {
+  flex: 0 0 180rpx;
+  margin-right: 20rpx;
+  height: 88rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 27rpx;
+}
+
+.hv-flat { opacity: 0.7; }
+.hv-dark { opacity: 0.88; }

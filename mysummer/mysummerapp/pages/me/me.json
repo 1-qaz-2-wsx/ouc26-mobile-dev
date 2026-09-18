@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "我的 · 旅行规划助手",
+  "renderer": "webview",
+  "navigationStyle": "default",
+  "usingComponents": {}
+}

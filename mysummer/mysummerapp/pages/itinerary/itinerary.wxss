@@ -1,29 +1,481 @@
-page { height: 100vh; display: flex; flex-direction: column; }
-.scrollarea { flex: 1; overflow: hidden; }
-.page-intro { padding: 34rpx 28rpx; border-radius: 26rpx; color: #fdfcf7; background: #344d42; }
-.intro-kicker, .intro-title, .intro-copy { display: block; }
-.intro-kicker { opacity: .65; font-size: 19rpx; letter-spacing: 3rpx; }
-.intro-title { margin-top: 26rpx; font-size: 40rpx; font-weight: 700; }
-.intro-copy { margin-top: 14rpx; opacity: .78; font-size: 24rpx; line-height: 1.6; }
-.timeline { margin-top: 30rpx; }
-.day-block { position: relative; padding-left: 34rpx; border-left: 3rpx solid #b9c7be; }
-.day-head { position: relative; display: flex; padding: 12rpx 0 24rpx; }
-.day-dot { position: absolute; left: -47rpx; top: 20rpx; width: 24rpx; height: 24rpx; border: 5rpx solid #f5f1e8; border-radius: 50%; background: #b85e48; }
-.day-heading { flex: 1; }
-.day-number, .day-title, .day-date, .node-type, .node-name, .node-copy, .segment-title, .segment-meta { display: block; }
-.day-number { color: #b25a45; font-size: 22rpx; font-weight: 700; }
-.day-title { margin-top: 5rpx; font-size: 31rpx; font-weight: 700; }
-.day-date { margin-top: 5rpx; color: #8c8e88; font-size: 22rpx; }
-.day-toggle { color: #65736b; font-size: 23rpx; }
-.day-content { padding-bottom: 28rpx; }
-.empty-day { margin-bottom: 18rpx; color: #888b84; font-size: 24rpx; }
-.place-node { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14rpx; }
-.node-type { color: #62806f; font-size: 21rpx; }
-.node-name { margin-top: 4rpx; font-size: 30rpx; font-weight: 700; }
-.node-copy { margin-top: 8rpx; color: #747872; font-size: 23rpx; }
-.node-arrow { font-size: 38rpx; color: #849087; }
-.segment-node { display: flex; align-items: center; gap: 16rpx; margin: 10rpx 0 18rpx; padding: 20rpx; border-radius: 18rpx; background: #e7ece7; }
-.transport-badge { padding: 10rpx 12rpx; border-radius: 12rpx; color: #fff; background: #587665; font-size: 20rpx; }
-.segment-main { flex: 1; }
-.segment-title { font-weight: 700; }
-.segment-meta { margin-top: 8rpx; color: #737a74; font-size: 22rpx; }
+/* ==========================================================================
+   我的行程（G5）
+
+   视觉真值：specs/frontend-refactor/design-system-contract.md §1 令牌 + §2 组件语法
+   边界：本页**不再** import styles/mvp.wxss（G1B 起 LEGACY ONLY）；类名统一 itn- 前缀。
+   取值：颜色/字号/圆角/间距按令牌写字面量，不用 var()（低版本安卓 webview 兜底）；
+        画布 390px → 750rpx（×1.923），高度/字号/行高一律取偶（半像素基线会发糊）。
+   结构：左侧日期轴（点选切换） + 右侧内容列（多旅行切换 → 当天记录卡 → 收尾）；
+        行车记录仍是页面内全屏态。
+   纪律：普通卡片无描边、无投影；卡片内动作只用描边/浅绿面，实心绿只给「去规划 / 保存记录 / 选中的行程」。
+   ========================================================================== */
+
+/* ---------- 页面与元素复位 ---------- */
+.itn-page {
+  min-height: 100vh;
+  /* 左 31rpx / 右 31rpx = --sp-page（16px）；底部留出安全区 */
+  padding: 0 31rpx calc(46rpx + env(safe-area-inset-bottom)) 31rpx;
+  overflow-x: hidden;
+  background: #f1f2ed;
+  color: #141414;
+  font-size: 26rpx;
+  line-height: 36rpx;
+}
+/* 本页已脱离 mvp.wxss，仍需显式清掉微信原生 button 的默认外观与 ::after 描边。
+   min-height 必须显式归零，否则宿主默认值会把矮按钮撑高。 */
+.itn-page button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  line-height: 36rpx;
+  text-align: center;
+}
+.itn-page button::after { border: 0; display: none; }
+.itn-page textarea {
+  display: block;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #141414;
+  font-size: inherit;
+  line-height: inherit;
+}
+.itn-page image { display: block; }
+.itn-num { font-variant-numeric: tabular-nums; }
+
+/* ---------- 错误条（状态，不是内容） ---------- */
+.itn-err {
+  margin-top: 24rpx;
+  padding: 20rpx 24rpx;
+  border-left: 6rpx solid #b3261e;
+  border-radius: 0 27rpx 27rpx 0;
+  background: #fdf0ee;
+  color: #b3261e;
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+.itn-err:empty { display: none; }
+
+/* ==========================================================================
+   空态
+   ========================================================================== */
+.itn-empty {
+  margin-top: 46rpx;
+  padding: 46rpx 38rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.itn-empty-ico {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 27rpx;
+  background-color: #f7f7f7;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 44rpx 44rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s6.8-6.1 6.8-10.9a6.8 6.8 0 1 0-13.6 0C5.2 14.9 12 21 12 21z'/%3E%3Ccircle cx='12' cy='10' r='2.4'/%3E%3C/svg%3E");
+}
+.itn-empty-title {
+  margin-top: 24rpx;
+  font-size: 34rpx;
+  line-height: 46rpx;
+  font-weight: 600;
+  color: #141414;
+}
+.itn-empty-sub {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 36rpx;
+  color: #767676;
+  text-align: center;
+}
+
+/* ==========================================================================
+   两栏：左日期轴 + 右内容列
+   ========================================================================== */
+.itn-body { display: flex; align-items: flex-start; }
+
+/* 轴列 56rpx ⇒ 轴心落在 31 + 28 = 59rpx；内容列左边界 31 + 56 + 40 = 127rpx */
+.itn-ax {
+  position: relative;
+  flex: 0 0 56rpx;
+  padding-top: 34rpx;
+}
+.itn-ax-rail {
+  position: absolute;
+  left: 27rpx;
+  top: 0;
+  bottom: 30rpx;
+  width: 2rpx;
+  background: #e5e5e5;
+}
+.itn-ax-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 48rpx;
+}
+/* 轴点的定高外框：选中态变大也不会把日期推下去 */
+.itn-ax-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24rpx;
+}
+.itn-ax-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: #9a9a9a;
+}
+.itn-ax-day.on .itn-ax-dot {
+  width: 24rpx;
+  height: 24rpx;
+  background: #00754a;
+}
+.itn-ax-date {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  color: #767676;
+}
+.itn-ax-day.on .itn-ax-date { color: #00754a; font-weight: 600; }
+.itn-ax-today {
+  margin-top: 4rpx;
+  height: 30rpx;
+  padding: 0 12rpx;
+  border-radius: 999rpx;
+  background: #e8f2ec;
+  color: #00754a;
+  font-size: 20rpx;
+  line-height: 30rpx;
+  font-weight: 500;
+}
+
+.itn-tl {
+  flex: 1;
+  min-width: 0;
+  margin-left: 40rpx;
+  margin-right: 8rpx;
+}
+
+/* ==========================================================================
+   多旅行切换
+   ========================================================================== */
+.itn-trips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 62rpx;
+}
+.itn-chip {
+  display: flex;
+  align-items: center;
+  height: 70rpx;
+  padding: 0 26rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 38rpx;
+  white-space: nowrap;
+}
+/* 选中的行程 = 实心绿（画布与契约 §2.3 的筛选选中态），卡片内动作不得再用实心绿 */
+.itn-chip.on {
+  border-color: #00754a;
+  background: #00754a;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   卡片（普通卡片：无描边、无投影）
+   ========================================================================== */
+.itn-card {
+  margin-top: 24rpx;
+  padding: 32rpx 32rpx 30rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.itn-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.itn-hd-title {
+  font-size: 28rpx;
+  line-height: 42rpx;
+  font-weight: 600;
+  color: #141414;
+}
+.itn-tag {
+  flex: none;
+  height: 50rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  line-height: 42rpx;
+  white-space: nowrap;
+}
+.itn-tag.ok { background: #e8f2ec; color: #00754a; font-weight: 500; }
+.itn-tag.grey { background: #e5e5e5; color: #767676; }
+.itn-body-text {
+  margin-top: 18rpx;
+  font-size: 24rpx;
+  line-height: 36rpx;
+  color: #4a4a4a;
+}
+
+/* 卡片内动作：按内容宽，绝不铺满 */
+.itn-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+  margin-top: 16rpx;
+}
+.itn-page .itn-act {
+  flex: none;
+  height: 66rpx;
+  padding: 0 32rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  line-height: 36rpx;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.itn-page .itn-act.outline {
+  border: 1px solid #9cc3b0;
+  background: #ffffff;
+  color: #00754a;
+}
+.itn-page .itn-act.tint {
+  background: #e8f2ec;
+  color: #00754a;
+}
+.itn-page .itn-act[aria-disabled="true"] { opacity: .55; }
+
+/* ==========================================================================
+   当天记录卡
+   ========================================================================== */
+.itn-item-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.itn-item-meta {
+  font-size: 24rpx;
+  line-height: 34rpx;
+  color: #767676;
+}
+.itn-item-title {
+  margin-top: 18rpx;
+  font-size: 28rpx;
+  line-height: 42rpx;
+  font-weight: 600;
+  color: #141414;
+  word-break: break-word;
+}
+.itn-item-note {
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  line-height: 36rpx;
+  color: #4a4a4a;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.itn-item-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15rpx;
+  margin-top: 20rpx;
+}
+.itn-item-photos image {
+  width: 138rpx;
+  height: 138rpx;
+  border-radius: 27rpx;
+  background: #f1f2ed;
+}
+.itn-acts-item { margin-top: 20rpx; }
+
+/* 当天无安排 */
+.itn-none {
+  padding: 44rpx 32rpx;
+  font-size: 24rpx;
+  line-height: 36rpx;
+  color: #767676;
+  text-align: center;
+}
+
+/* 结束旅程：白底通栏（不是主操作，避免与卡片内动作抢权重） */
+.itn-page .itn-end {
+  margin-top: 28rpx;
+  width: 100%;
+  height: 86rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   主操作（空态去规划 / 记录页保存）——实心绿只出现在这些地方 + 选中的行程 chip
+   ========================================================================== */
+.itn-page .itn-cta {
+  margin-top: 23rpx;
+  width: 100%;
+  height: 92rpx;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 26rpx;
+  line-height: 36rpx;
+  font-weight: 500;
+}
+.itn-page .itn-empty .itn-cta { margin-top: 30rpx; }
+
+/* ==========================================================================
+   行程记录（页面内全屏态）
+   ========================================================================== */
+.itn-rec {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  overflow-y: auto;
+  padding: 0 31rpx calc(46rpx + env(safe-area-inset-bottom)) 31rpx;
+  background: #f1f2ed;
+}
+.itn-rec-hd {
+  margin-top: 32rpx;
+  padding: 0 2rpx;
+}
+.itn-rec-eyebrow {
+  display: block;
+  font-size: 22rpx;
+  line-height: 30rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+  color: #00754a;
+}
+.itn-rec-title {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 34rpx;
+  line-height: 46rpx;
+  font-weight: 700;
+  color: #141414;
+  word-break: break-word;
+}
+.itn-rec-card {
+  margin-top: 24rpx;
+  padding: 32rpx 31rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.itn-rec-lb {
+  display: block;
+  font-size: 22rpx;
+  line-height: 30rpx;
+  color: #4a4a4a;
+}
+.itn-rec-area {
+  box-sizing: border-box;
+  margin-top: 14rpx;
+  height: 160rpx;
+  padding: 26rpx 24rpx;
+  border-radius: 27rpx;
+  background: #f7f7f7;
+  font-size: 26rpx;
+  line-height: 40rpx;
+  color: #141414;
+}
+.itn-rec-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15rpx;
+  margin-top: 26rpx;
+}
+.itn-rec-photo,
+.itn-rec-add {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 27rpx;
+}
+.itn-rec-photo image { width: 100%; height: 100%; border-radius: 27rpx; background: #e8f2ec; }
+.itn-rec-add {
+  background-color: #f7f7f7;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 48rpx 48rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+}
+.itn-rec-del {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  width: 42rpx;
+  height: 42rpx;
+  border-radius: 50%;
+  background-color: #141414;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 32rpx 32rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7L7 17'/%3E%3C/svg%3E");
+}
+.itn-rec-tip {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  color: #767676;
+}
+.itn-rec-foot {
+  display: flex;
+  gap: 15rpx;
+  margin-top: 24rpx;
+}
+.itn-page .itn-cancel {
+  flex: 0 0 170rpx;
+  height: 92rpx;
+  border: 1px solid #9cc3b0;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #00754a;
+  font-size: 26rpx;
+  line-height: 36rpx;
+  font-weight: 500;
+}
+.itn-page .itn-save {
+  flex: 1;
+  height: 92rpx;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 26rpx;
+  line-height: 36rpx;
+  font-weight: 500;
+}
+.itn-page .itn-save[aria-disabled="true"] { opacity: .55; }

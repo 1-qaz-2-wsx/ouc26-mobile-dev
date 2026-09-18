@@ -1,0 +1,107 @@
+<!-- G7 · 社区首页（Community feed）
+     信息优先级：内容流 > 顶部区。
+     顶部区四行：内容范围 + 发布、推荐/关注、搜索、类型筛选；不 sticky、不占半屏。
+     发布不放进 tabs 行，避免和「推荐 / 关注」被读成一个分段控件。
+     推荐 = 最新公开内容（无推荐算法、无 AI 推荐暗示）。 -->
+<view class="com-page">
+
+ <!-- 顶部：内容范围 + 发布（本页唯一实心绿主 CTA） -->
+ <view class="com-controls">
+  <view class="com-controls__top">
+   <text class="com-scope">{{cloudScope ? '云端公开内容 · 提交后即可展示' : '本机演示内容 · 仅当前设备可见'}}</text>
+   <button class="com-publish" bindtap="compose">发布</button>
+  </view>
+
+  <view class="com-tabs">
+   <button class="com-tab {{tab === 'recommend' ? 'com-tab--on' : ''}}" data-tab="recommend" bindtap="switchTab">推荐</button>
+   <button class="com-tab {{tab === 'following' ? 'com-tab--on' : ''}}" data-tab="following" bindtap="switchTab">关注</button>
+  </view>
+
+  <view class="com-search">
+   <text class="com-search__icon"></text>
+   <input class="com-search__input" value="{{draftKeyword}}" placeholder="搜索标题、正文或地点" confirm-type="search" bindinput="input" bindconfirm="search"/>
+   <button class="com-search__go" bindtap="search">搜索</button>
+  </view>
+
+  <view class="com-types">
+   <button class="com-chip {{type === 'all' ? 'com-chip--on' : ''}}" data-type="all" bindtap="switchType">全部</button>
+   <button class="com-chip {{type === 'route' ? 'com-chip--on' : ''}}" data-type="route" bindtap="switchType">路线</button>
+   <button class="com-chip {{type === 'review' ? 'com-chip--on' : ''}}" data-type="review" bindtap="switchType">评价</button>
+   <button class="com-chip {{type === 'question' ? 'com-chip--on' : ''}}" data-type="question" bindtap="switchType">问题</button>
+  </view>
+ </view>
+
+ <!-- 列表头：把「推荐」的口径写在界面上，避免被读成算法推荐 -->
+ <view class="com-listhead">
+  <text class="com-listhead__title">{{tab === 'recommend' ? '最新公开内容' : '我关注的作者'}}</text>
+  <text wx:if="{{posts.length}}" class="com-listhead__meta">{{posts.length}} 条</text>
+ </view>
+
+ <!-- 错误：真实状态，不是假数据 -->
+ <view wx:if="{{error}}" class="com-err">
+  <view class="com-err__copy">
+   <text class="com-err__title">社区内容加载失败</text>
+   <text class="com-err__text">{{error}}</text>
+   <text class="com-err__hint">检查网络后重试</text>
+  </view>
+  <button class="com-err__go" bindtap="retry">重试</button>
+ </view>
+
+ <!-- 加载：单张状态卡 + 真实文案（不拿骨架卡冒充内容） -->
+ <view wx:if="{{busy}}" class="com-loading">
+  <view class="com-spin"></view>
+  <text class="com-loading__text">正在加载社区内容…</text>
+ </view>
+
+ <!-- 空态：按真实原因分三种文案，不带假内容 -->
+ <view wx:if="{{!busy && !posts.length}}" class="com-empty">
+  <view class="com-empty__icon"></view>
+  <text class="com-empty__title">{{emptyTitle}}</text>
+  <text class="com-empty__text">{{emptyMessage}}</text>
+  <view class="com-empty__actions">
+   <button wx:if="{{error}}" class="com-btn com-btn--sec" bindtap="retry">重试</button>
+   <button wx:if="{{requiresLogin}}" class="com-btn com-btn--sec" bindtap="goLogin">去登录</button>
+   <button wx:if="{{tab === 'following' && !cloud}}" class="com-btn com-btn--sec" data-tab="recommend" bindtap="switchTab">去推荐发现作者</button>
+  </view>
+ </view>
+
+ <!-- 内容流 -->
+ <view wx:for="{{posts}}" wx:key="id" class="com-post" data-id="{{item.id}}" bindtap="open">
+  <view class="com-author">
+   <image wx:if="{{item.authorAvatar}}" class="com-avatar" src="{{item.authorAvatar}}" mode="aspectFill" lazy-load/>
+   <view wx:else class="com-avatar com-avatar--fallback">旅</view>
+   <view class="com-author__copy">
+    <text class="com-author__name">{{item.authorName}}</text>
+    <text class="com-author__meta">{{item.publishedText}}</text>
+   </view>
+   <button class="com-author__link" catchtap="member" data-id="{{item.authorId}}">主页</button>
+  </view>
+
+  <text class="com-post__title">{{item.title}}</text>
+  <text wx:if="{{item.summary}}" class="com-post__summary">{{item.summary}}</text>
+
+  <view class="com-post__facts">
+   <text class="com-tag com-tag--{{item.type}}">{{item.typeLabel}}</text>
+   <text wx:if="{{item.placeText}}" class="com-place"><text class="com-place__icon"></text>{{item.placeText}}</text>
+  </view>
+
+  <image wx:if="{{item.photo}}" class="com-post__cover" src="{{item.photo}}" mode="aspectFill" lazy-load/>
+
+  <!-- 次级动作：淡底胶囊，不做成一排实体按钮 -->
+  <view class="com-actions">
+   <button class="com-act {{item.viewerLiked ? 'com-act--on' : ''}}" loading="{{item.actionBusy}}" aria-disabled="{{item.actionBusy}}" catchtap="like" data-index="{{index}}">
+    <text class="com-act__icon com-act__icon--like"></text>{{item.likeCount || 0}}
+   </button>
+   <button class="com-act {{item.viewerFavorited ? 'com-act--on' : ''}}" loading="{{item.actionBusy}}" aria-disabled="{{item.actionBusy}}" catchtap="favorite" data-index="{{index}}">
+    <text class="com-act__icon com-act__icon--book"></text>{{item.favoriteCount || 0}}
+   </button>
+   <text class="com-actions__cmt"><text class="com-act__icon com-act__icon--cmt"></text>评论 {{item.commentCount || 0}}</text>
+  </view>
+ </view>
+
+ <!-- 分页脚：只有真实云端分页才敢说「已经到底了」 -->
+ <view wx:if="{{loadingMore}}" class="com-foot">正在加载更多…</view>
+ <view wx:elif="{{cloud && posts.length && !hasMore}}" class="com-foot">已经到底了</view>
+ <view wx:elif="{{!cloud && posts.length}}" class="com-foot">本机演示内容已全部展示</view>
+
+</view>

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "菜单",
+  "renderer": "webview",
+  "navigationStyle": "default",
+  "usingComponents": {}
+}

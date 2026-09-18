@@ -1,46 +1,245 @@
-<navigation-bar title="兴安岭穷游记" back="{{false}}" color="#20372f" background="#fffdf7"></navigation-bar>
-<!-- Skyline 的 scroll-view 必须声明 type=list，否则内部原生地图可能不创建。 -->
-<scroll-view class="scrollarea" scroll-y type="list" show-scrollbar="{{false}}">
-  <view class="page-shell map-page">
-    <view class="hero">
-      <text class="hero-kicker">MY SUMMER JOURNEY</text>
-      <text class="hero-title">从海边一路向北</text>
-      <text class="hero-copy">沿铁路、轮渡与客运，进入森林与草原。</text>
-    </view>
-
-    <view class="stats-grid">
-      <view class="stat" wx:for="{{tripStats}}" wx:key="label">
-        <text class="stat-value">{{item.value}}</text><text class="stat-label">{{item.label}}</text>
-      </view>
-    </view>
-
-    <view class="section map-section">
-      <view class="section-title">完整路线</view>
-      <view class="section-subtitle">点击地点标记查看这一站；哈尔滨等重复节点合并展示。</view>
-      <map wx:if="{{!mapFailed}}" class="route-map" latitude="{{centerLatitude}}" longitude="{{centerLongitude}}" scale="{{mapScale}}" markers="{{markers}}" polyline="{{polyline}}" include-points="{{includePoints}}" bindmarkertap="onMarkerTap" binderror="onMapError" enable-zoom enable-scroll></map>
-      <view wx:else class="empty-card">
-        <view>地图暂时没有加载成功，仍可从下方地点列表浏览。</view>
-        <button class="ghost-button retry-button" bindtap="retryMap">重新加载地图</button>
-      </view>
-
-      <view wx:if="{{selectedPlace}}" class="place-preview card">
-        <view class="preview-top">
-          <view><text class="preview-day">DAY {{selectedPlace.visitDaysText}}</text><text class="preview-name">{{selectedPlace.name}}</text></view>
-          <text class="preview-close" bindtap="closePlaceCard">×</text>
-        </view>
-        <text class="preview-copy">{{selectedPlace.summary}}</text>
-        <view><text class="tag" wx:for="{{selectedPlace.tags}}" wx:key="*this">{{item}}</text></view>
-        <button class="primary-button" data-id="{{selectedPlace.id}}" bindtap="openPlace">查看这一站</button>
-      </view>
-    </view>
-
-    <view class="section">
-      <view class="section-title">全部停靠点</view>
-      <view class="place-list card">
-        <view class="link-row" wx:for="{{markers}}" wx:key="placeId" data-id="{{item.placeId}}" bindtap="openPlace">
-          <text>{{item.callout.content}}</text><text class="muted">查看 ›</text>
-        </view>
-      </view>
-    </view>
+<view class="index-page">
+ <!-- ===== p04 搜索地点（searchMode === true） ===== -->
+ <scroll-view wx:if="{{searchMode}}" class="search-page" scroll-y enhanced show-scrollbar="{{false}}" scroll-top="{{searchScrollTop}}" bindscroll="searchScroll">
+  <view class="search-bar">
+   <input focus placeholder="搜索城市、景点、车站或酒店" value="{{keyword}}" bindfocus="enterSearch" bindinput="keywordInput" bindconfirm="search" confirm-type="search"/>
+   <button class="search-cancel" bindtap="search">搜索</button>
   </view>
-</scroll-view>
+
+  <!-- 错误态：标题 + 说明 + 重试 -->
+  <view wx:if="{{error}}" class="err">
+   <view class="err-mid"><text class="err-title">搜索失败</text><text class="err-desc">{{error}}</text></view>
+   <button wx:if="{{keyword}}" bindtap="search">重新搜索</button>
+  </view>
+
+  <!-- 加载态 -->
+  <view wx:if="{{loading}}" class="search-loading"><view class="spin"></view><text>正在搜索腾讯地图…</text></view>
+
+  <block wx:elif="{{keyword}}">
+   <!-- 城市 / 行政区 -->
+   <view wx:if="{{cityResults.length}}" class="result-group">
+    <text class="result-heading">城市 / 行政区</text>
+    <view class="result-row" wx:for="{{cityResults}}" wx:key="id">
+     <view class="result-main" data-id="{{item.id}}" bindtap="resultDetail">
+      <text class="result-title">{{item.name}}</text>
+      <text class="result-meta">{{item.address || item.summary}}{{item.isProvince?' · 请选择城市':' · 城市目的地'}}</text>
+     </view>
+     <button wx:if="{{item.canAdd !== false}}" class="result-add {{item.added?'menu-button-added':''}}" data-id="{{item.id}}" catchtap="add" aria-label="{{item.added?'已加入，点击移出菜单':'加入菜单'}}">{{item.added?'已加入':'＋ 菜单'}}</button>
+     <button wx:else class="result-add" data-id="{{item.id}}" catchtap="resultDetail">选择城市</button>
+    </view>
+   </view>
+
+   <!-- 地点 -->
+   <view wx:if="{{placeResults.length}}" class="result-group">
+    <text class="result-heading">地点</text>
+    <view class="result-row" wx:for="{{placeResults}}" wx:key="id">
+     <view class="result-main" data-id="{{item.id}}" bindtap="resultDetail">
+      <text class="result-title">{{item.name}}</text>
+      <!-- PDF p04：地点行只有「标题 + 一行元信息」，元信息 = 区/地址 · 类别 -->
+      <text class="result-meta">{{item.address || item.city || '地址待补充'}} · {{item.summary || item.category}}</text>
+     </view>
+     <button class="result-add {{item.added?'menu-button-added':''}}" data-id="{{item.id}}" catchtap="add" aria-label="{{item.added?'已加入，点击移出菜单':'加入菜单'}}">{{item.added?'已加入':'＋ 菜单'}}</button>
+    </view>
+   </view>
+
+   <!-- 空态 -->
+   <view wx:if="{{!loading && !error && !cityResults.length && !placeResults.length}}" class="search-state">
+    <view class="empty-icon"></view>
+    <text class="subtitle">没有找到「{{keyword}}」</text>
+    <text class="note">试试完整城市名、景点名或更具体的关键词</text>
+   </view>
+  </block>
+
+  <!-- 未输入关键词 -->
+  <view wx:else class="search-state">
+   <view class="empty-icon"></view>
+   <text class="subtitle">搜索目的地</text>
+   <text class="note">输入关键词后将显示城市和具体地点；点击结果查看信息，或直接加入菜单。</text>
+  </view>
+ </scroll-view>
+
+ <!-- ===== p03 地图选点 / p05 地图选点·空态（searchMode === false） ===== -->
+ <block wx:else>
+  <map wx:if="{{!mapFailed}}" class="home-map" latitude="{{latitude}}" longitude="{{longitude}}" scale="{{mapScale}}" include-points="{{points}}" markers="{{markers}}" enable-poi="{{true}}" bindpoitap="poi" bindmarkertap="marker" bindcallouttap="marker" bindregionchange="mapRegionChange" binderror="mapError"/>
+  <view wx:if="{{mapFailed}}" class="map-error"><text>地图加载失败，仍可从下方选择地点。</text><button bindtap="retryMap">重新加载地图</button></view>
+
+  <!-- 悬浮控件卡：搜索入口恒在；辅助控件按状态降层级 -->
+  <view class="map-controls">
+   <view class="map-search" bindtap="enterSearch">
+    <view class="map-search-icon"></view>
+    <text class="map-search-text">{{keyword || '搜索城市、景点、车站或酒店'}}</text>
+   </view>
+
+   <!-- p03 正常态：辅助按钮恒在（locate/seeds 是既有能力，不能因空态而消失）。
+        p05 真空态 = 地图失败且无任何可展示地点，此时悬浮区才退化为「只有搜索框」。 -->
+   <view wx:if="{{!mapFailed || places.length > 0}}" class="map-control-row">
+    <button bindtap="locate" loading="{{locating}}" disabled="{{locating}}">{{locating?'定位中':'我的位置'}}</button>
+    <button bindtap="seeds">示例地点</button>
+   </view>
+
+   <!-- 次级辅助：显示搜索结果开关 -->
+   <view wx:if="{{searchResultCount}}" class="map-aux-row">
+    <view class="map-aux-copy"><text>显示搜索结果</text><text class="map-aux-note">{{markerMode==='all'?'已显示本次搜索的全部地点':'打开开关，查看其他搜索结果'}}</text></view>
+    <switch checked="{{markerMode==='all'}}" color="#00754A" bindchange="toggleMarkerMode" aria-label="显示全部搜索结果"/>
+   </view>
+   <text wx:if="{{locationText}}" class="map-location">当前位置：{{locationText}}</text>
+
+   <!-- 次级辅助：分类筛选 -->
+   <radio-group wx:if="{{searchResultCount && markerMode==='all' && !temporaryPlaceId}}" class="map-filter" bindchange="filter">
+    <label class="filter-tag"><radio value="全部" checked="{{filter==='全部'}}"/>全部</label>
+    <label class="filter-tag"><radio value="自然" checked="{{filter==='自然'}}"/>自然</label>
+    <label class="filter-tag"><radio value="人文" checked="{{filter==='人文'}}"/>人文</label>
+   </radio-group>
+  </view>
+
+  <!-- 定位失败：danger -->
+  <view wx:if="{{locationFailure}}" class="map-location-error">
+   <text>定位失败：{{locationFailure}}</text>
+   <button bindtap="openLocationSetting">打开位置权限</button>
+   <button bindtap="locate">重新定位</button>
+  </view>
+
+  <!-- 底部浮层：提示胶囊 + 菜单 CTA。p03 正常态两者都在；
+       仅 p05 真空态（地图失败且无任何地点）不出现。 -->
+  <view wx:if="{{!sheetPlace && !mapFailed}}" class="map-selection-hint">搜索或轻点地图地点，展开详情</view>
+  <button wx:if="{{!mapFailed || places.length > 0}}" class="floating" style="bottom: {{sheetPlace ? sheetHeight + 16 : 28}}px;" bindtap="menu">菜单 · {{count}}</button>
+
+  <!-- 地图失败降级列表 -->
+  <scroll-view wx:if="{{mapFailed && places.length && !sheetPlace}}" class="place-list-overlay" scroll-y enhanced show-scrollbar="{{false}}">
+   <view class="place-list-hint">点击地图气泡，在地图上展开详情</view>
+   <view id="place-card-{{item.markerId}}" class="place-card" wx:for="{{places}}" wx:key="id">
+    <view class="place-summary" data-id="{{item.id}}" bindtap="selectList">
+     <view class="place-summary-main">
+      <text class="subtitle">{{item.name}}</text>
+      <text class="place-address">{{item.address || '点击获取地点详情'}}</text>
+      <text class="note">{{item.source}} · {{item.category}}</text>
+     </view>
+     <button wx:if="{{!item.expanded && item.canAdd !== false}}" class="place-card-add {{item.added?'menu-button-added':''}}" data-id="{{item.id}}" catchtap="add" aria-label="{{item.added?'已加入，点击移出菜单':'加入菜单'}}">{{item.added?'已加入':'加入菜单'}}</button>
+    </view>
+    <view wx:if="{{item.expanded}}" class="place-expanded">
+     <text wx:if="{{item.detailLoading}}" class="note">正在获取地点详情…</text>
+     <view wx:if="{{item.detailError}}" class="{{item.detailMissing?'detail-missing':'err'}}">
+      <view class="err-mid"><text class="err-title">{{item.detailMissing?'补充资料暂缺':'地点详情补全失败'}}</text><text class="err-desc">{{item.detailError}}</text></view>
+      <button wx:if="{{!item.detailMissing}}" data-id="{{item.id}}" bindtap="retryDetail">重试</button>
+     </view>
+     <view class="place-facts">
+      <text wx:if="{{item.province}}">省份：{{item.province}}</text>
+      <text wx:if="{{item.city}}">城市：{{item.city}}</text>
+      <text>类型：{{item.category}}</text>
+      <text wx:if="{{item.telephone}}">电话：{{item.telephone}}</text>
+      <text wx:if="{{item.summary}}">{{item.summary}}</text>
+     </view>
+     <text class="note">地点信息来源：{{item.source}}<text wx:if="{{item.providerId}}"> · {{item.providerKind==='district'?'行政区':'POI'}} {{item.providerId}}</text></text>
+     <view class="row">
+      <button wx:if="{{item.canAdd !== false}}" class="{{item.added?'menu-button-added':''}}" data-id="{{item.id}}" bindtap="add" aria-label="{{item.added?'已加入，点击移出菜单':'加入菜单'}}">{{item.added?'已加入菜单':'加入菜单'}}</button>
+      <button data-id="{{item.id}}" bindtap="detail">查看完整详情</button>
+     </view>
+    </view>
+   </view>
+  </scroll-view>
+
+  <!-- ===== 首页地点抽屉（高度为 px，来自 map-page.js 运行时计算） ===== -->
+  <view wx:if="{{sheetPlace}}" class="place-sheet" style="height: {{sheetHeight}}px; max-height: {{sheetMaxHeight}}px; min-height: {{sheetMinHeight}}px;">
+   <view class="sheet-drag-region" bindtouchstart="sheetTouchStart" catchtouchmove="sheetTouchMove" bindtouchend="sheetTouchEnd" bindtouchcancel="sheetTouchCancel">
+    <view class="sheet-handle"></view>
+    <view class="sheet-title-row">
+     <text class="sheet-title">{{sheetPlace.name}}</text>
+     <button wx:if="{{sheetCanAdd}}" class="sheet-add {{sheetAdded?'sheet-add-added':''}}" data-id="{{sheetPlace.id}}" catchtouchstart="sheetControlTouch" catchtouchmove="sheetControlTouch" catchtouchend="sheetControlTouchEnd" catchtouchcancel="sheetControlTouchCancel" catchtap="addSheet" aria-label="{{sheetAdded?'已加入，点击移出菜单':'加入菜单'}}">{{sheetAdded?'已加入':'加入菜单'}}</button>
+     <button wx:elif="{{sheetPlace.planningRole==='choose_city'}}" class="sheet-add" bindtap="selectCity">选择城市</button>
+     <button wx:else class="sheet-add" disabled>{{sheetPlace.recognitionStatus==='failed'?'待重试':'待确认'}}</button>
+    </view>
+    <view class="sheet-tags">
+     <text class="tag">{{sheetPlace.category || (sheetPlace.isCity?'城市':sheetPlace.recognitionStatus==='unidentified'?'未识别位置':'地点')}}</text>
+     <text wx:if="{{sheetPlace.province}}" class="tag">{{sheetPlace.province}}</text>
+     <text wx:if="{{sheetPlace.city && sheetPlace.city !== sheetPlace.name}}" class="tag">{{sheetPlace.city}}</text>
+    </view>
+    <text wx:if="{{sheetDisplayAddress}}" class="sheet-address">{{sheetDisplayAddress}}</text>
+    <text wx:elif="{{sheetDetailLoading}}" class="sheet-address">正在确认地点身份…</text>
+    <text wx:elif="{{sheetPlace.recognitionStatus==='unidentified'}}" class="sheet-address">位置尚未确认，请选择候选地点或重试</text>
+    <text wx:elif="{{sheetPlace.recognitionStatus==='candidate'}}" class="sheet-address">地点待确认，请从下方候选中选择</text>
+    <text wx:elif="{{sheetDetailMissing}}" class="sheet-address">地点已确认，但暂无补充介绍</text>
+    <text wx:elif="{{sheetDetailError}}" class="sheet-address">地点请求失败，可重试</text>
+   </view>
+
+   <scroll-view class="sheet-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+    <view class="sheet-content">
+     <view wx:if="{{sheetDetailLoading}}" class="detail-status">正在从腾讯地图确认地点身份…</view>
+     <!-- 失败（danger）与缺失（中性）必须视觉分离 -->
+     <view wx:if="{{sheetDetailError}}" class="err detail-error">
+      <view class="err-mid"><text class="err-title">地点详情补全失败</text><text class="err-desc">{{sheetDetailError}}</text></view>
+      <button bindtap="retrySheetDetail">重试</button>
+     </view>
+     <view wx:if="{{sheetDetailMissing}}" class="detail-missing">地点已确认，但暂无补充介绍；基础信息仍可加入菜单。</view>
+     <view wx:if="{{sheetPlace.recognitionStatus==='unidentified'}}" class="detail-status">暂未确认这是具体地点还是城市，请选择候选地点或重新获取。</view>
+
+     <view wx:if="{{sheetCandidates.length}}" class="detail-section candidate-section">
+      <view class="section-title">可确认的候选地点</view>
+      <view wx:for="{{sheetCandidates}}" wx:key="id" class="candidate-row" data-id="{{item.id}}" bindtap="selectCandidate">
+       <view><text class="candidate-title">{{item.name}}</text><text class="note">{{item.address || item.category || '位置候选'}}<text wx:if="{{item.city}}"> · {{item.city}}</text></text></view>
+       <text class="candidate-action">选择</text>
+      </view>
+     </view>
+
+     <view class="detail-section">
+      <view class="section-title">{{sheetPlace.isProvince?'行政区信息':sheetPlace.isCity?'城市信息':'地点信息'}}</view>
+      <view class="detail-line" wx:if="{{sheetPlace.province}}">省份：{{sheetPlace.province}}</view>
+      <view class="detail-line" wx:if="{{sheetPlace.city && sheetPlace.city !== sheetPlace.name}}">城市：{{sheetPlace.city}}</view>
+      <view class="detail-line" wx:if="{{sheetPlace.district}}">区县：{{sheetPlace.district}}</view>
+      <view class="detail-line" wx:if="{{sheetPlace.address}}">地址：{{sheetPlace.address}}</view>
+      <view class="detail-line" wx:if="{{sheetPlace.telephone}}">电话：{{sheetPlace.telephone}}</view>
+      <view class="detail-line" wx:if="{{sheetPlace.latitude !== undefined && sheetPlace.longitude !== undefined}}">位置：{{sheetPlace.latitude}}, {{sheetPlace.longitude}}</view>
+      <text class="note">腾讯地图信息 · {{sheetPlace.source}}<text wx:if="{{sheetPlace.providerId}}"> · {{sheetPlace.providerKind==='district'?'行政区':'POI'}} {{sheetPlace.providerId}}</text></text>
+      <view wx:if="{{sheetPlace.summary}}" class="detail-copy">{{sheetPlace.summary}}</view>
+      <view wx:if="{{sheetPlace.tips}}" class="detail-copy">提示：{{sheetPlace.tips}}</view>
+     </view>
+
+     <view class="detail-section">
+      <view class="section-title-row">
+       <view class="section-title">社区内容</view>
+       <text class="community-meta">{{sheetCommunityLoading?'正在加载…':sheetPosts.length+' 条关联内容'}}</text>
+      </view>
+      <view wx:if="{{sheetCommunityError}}" class="err">
+       <view class="err-mid"><text class="err-title">社区内容加载失败</text><text class="err-desc">{{sheetCommunityError}}</text></view>
+       <button bindtap="retrySheetCommunity">重试</button>
+      </view>
+      <view class="community-grid">
+       <view class="community-stat"><text class="community-label">社区推荐度</text><text class="community-value">{{sheetRatingText || '暂无评分'}}</text></view>
+       <view class="community-stat"><text class="community-label">建议游玩时间</text><text class="community-value">{{sheetDurationText || '暂无记录'}}</text></view>
+      </view>
+     </view>
+
+     <view class="detail-section">
+      <view class="subtitle">社区评价</view>
+      <view wx:if="{{!sheetReviews.length}}" class="empty-card">暂无社区成员评价。</view>
+      <view wx:for="{{sheetReviews}}" wx:key="id" class="reference-card" data-id="{{item.id}}" bindtap="sheetPost">
+       <view class="subtitle">{{item.title}}</view>
+       <view wx:if="{{item.rating}}" class="note">推荐 {{item.rating}} / 5<text wx:if="{{item.duration}}"> · 建议 {{item.duration}}</text></view>
+       <view class="reference-copy">{{item.content}}</view>
+      </view>
+     </view>
+
+     <view class="detail-section">
+      <view class="subtitle">社区照片</view>
+      <view wx:if="{{!sheetPhotos.length}}" class="empty-card">暂无社区成员上传的照片。</view>
+      <view wx:else class="photos"><image wx:for="{{sheetPhotos}}" wx:key="*this" src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="previewSheetPhoto"/></view>
+     </view>
+
+     <view class="detail-section">
+      <view class="subtitle">社区旅行路线</view>
+      <view wx:if="{{!sheetRoutes.length}}" class="empty-card">暂无包含该地点的公开旅行路线。</view>
+      <view wx:for="{{sheetRoutes}}" wx:key="id" class="reference-card" data-id="{{item.id}}" bindtap="sheetPost">
+       <view class="subtitle">{{item.title}}</view>
+       <view class="note">{{item.authorName}} · 点击查看路线</view>
+      </view>
+     </view>
+
+     <view class="detail-section">
+      <view class="subtitle">其他社区参考</view>
+      <view wx:if="{{!sheetOtherPosts.length}}" class="empty-card">暂无其他关联内容。</view>
+      <view wx:for="{{sheetOtherPosts}}" wx:key="id" class="reference-card" data-id="{{item.id}}" bindtap="sheetPost">{{item.title}}</view>
+     </view>
+    </view>
+   </scroll-view>
+  </view>
+ </block>
+</view>

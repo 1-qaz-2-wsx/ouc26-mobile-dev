@@ -1,26 +1,286 @@
-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-.scrollarea { flex: 1; overflow: hidden; }
-.map-page { padding-top: 18rpx; }
-.hero { min-height: 280rpx; padding: 46rpx 34rpx; border-radius: 30rpx; color: #fff; background: linear-gradient(145deg, #244d40, #6b8770 64%, #bd7759); }
-.hero-kicker, .hero-title, .hero-copy { display: block; }
-.hero-kicker { opacity: .72; font-size: 20rpx; letter-spacing: 4rpx; }
-.hero-title { margin-top: 44rpx; font-size: 50rpx; font-weight: 700; }
-.hero-copy { margin-top: 16rpx; opacity: .88; font-size: 26rpx; }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12rpx; margin-top: 18rpx; }
-.stat { padding: 20rpx 8rpx; border-radius: 18rpx; background: #fffdf8; text-align: center; }
-.stat-value, .stat-label { display: block; }
-.stat-value { color: #244d40; font-size: 27rpx; font-weight: 700; }
-.stat-label { margin-top: 8rpx; color: #888b84; font-size: 20rpx; }
-.route-map { width: 100%; height: 650rpx; margin-top: 18rpx; border-radius: 24rpx; overflow: hidden; }
-.place-preview { position: relative; z-index: 2; margin: -44rpx 20rpx 0; }
-.preview-top { display: flex; justify-content: space-between; }
-.preview-day, .preview-name, .preview-copy { display: block; }
-.preview-day { color: #b25a45; font-size: 22rpx; font-weight: 700; }
-.preview-name { margin-top: 6rpx; font-size: 38rpx; font-weight: 700; }
-.preview-copy { margin: 14rpx 0; color: #666c67; line-height: 1.6; }
-.preview-close { padding: 0 8rpx; color: #8b8e88; font-size: 48rpx; }
-.retry-button { width: 260rpx; margin-top: 20rpx; }
+/* ==========================================================================
+   G2 · 地图体系（pages/index 本体）
+   map-search / map-selection 通过 @import 复用本文件；三页共用同一份模板与样式。
+
+   真值：设计稿/app/app.css（令牌）+ 设计稿/旅行规划助手 · UI 统一重设计.pdf（逐屏结构）
+   换算：rpx = pdf_px × (750 / 542) = pdf_px × 1.3838（尺度无关，与画板宽绑定）
+   画布屏：p03 地图选点 / p04 搜索地点 / p05 地图选点·空态 + 首页地点抽屉
+
+   ⚠️ 三条硬约束（G2-R2 修复）：
+      1. 按钮一律 display:flex + align-items/justify-content:center。
+         旧实现是 block + line-height:1.35 + min-height，文字贴顶 → 「字飘出按钮中心」。
+         设计稿 app.css 的 .btn 本身就是 inline-flex + center，这里与设计对齐。
+      2. 行高一律写整数 rpx，不写小数倍率。小数行高在小程序里会产生半像素基线 → 文字发虚。
+      3. data.sheetHeight 由 map-page.js 以 px 计算并内联（height:{{sheetHeight}}px），
+         拖拽数学基于 clientY 差值，**禁止 rpx 化**。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   00 页面底（p03/p05 地图铺满；p04 搜索页内部滚动）
+   -------------------------------------------------------------------------- */
+page{height:100vh;overflow:hidden;background:#f1f2ed}
+.index-page{position:relative;width:100%;height:100vh;overflow:hidden;color:#141414;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+
+/* mvp-only 的基础文本骨架：本页 WXML 仍使用裸 .subtitle / .note。
+   只迁入这组展示基线，不迁 mvp 的 button/input 元素级默认尺寸。 */
+.index-page .subtitle{display:block;margin:4rpx 0 12rpx;font-size:31rpx;line-height:43rpx;font-weight:650}
+.index-page .note{display:block;margin:10rpx 0;color:#767676;font-size:24rpx;line-height:38rpx}
+
+/* --------------------------------------------------------------------------
+   00b 按钮基线：G2 范围内所有按钮共用
+
+   ⚠️ min-height:0 必须显式声明。styles/mvp.wxss:12 的 button{min-height:84rpx}(0,0,1)
+   只在本条「未声明该属性」时生效 —— 会让所有比 84rpx 矮的自定义按钮
+   （动作胶囊 60 / 我的位置 76 / 降级卡 62 / 定位失败 66rpx）全部被撑到 84rpx。
+   这正是「加入菜单 / 已加入菜单 尺寸与预期不符」的总根因。
+   （G3 的 menu.wxss 复位里已写过同一条注释，本页此前漏了。）
+
+   ⚠️ 不写 overflow:hidden。border-radius 本身就会裁背景，::after 已清掉；
+   而 button + border-radius + overflow:hidden 会让小程序把按钮提升成独立合成层，
+   层内文字被降采样 → 「字体模糊」。G3 已验收的复位同样没有这一条。
+   -------------------------------------------------------------------------- */
+.index-page{font-size:26rpx;line-height:36rpx}
+
+.index-page button{display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  min-height:0;margin:0;padding:0;border:0;border-radius:999rpx;background:transparent;color:#141414;
+  font-size:26rpx;font-weight:500;line-height:36rpx;white-space:nowrap}
+
+/* 原生 button::after 会画一个 10rpx 圆角的方框描边盖在胶囊上 → 看起来「不够圆」。
+   与 app.wxss / me.wxss / menu.wxss 的既有做法一致，显式再清一次。 */
+.index-page button::after{border:0;display:none}
+
+/* 文字落整像素规则（G2-R3）：align-items:center 下，行盒顶边 = (高 − 行高)/2。
+   该差值为奇数时行盒落在半像素上，整块文字被偏移半格 → 发虚。
+   故所有按钮/容器一律满足「高度 − 行高 = 偶数」；字号也取偶数，让半行距为整数。 */
+
+/* --------------------------------------------------------------------------
+   01 地图层与降级（z 序：地图0 → 地图失败1 → 悬浮卡2 → 降级列表3 → 定位失败4 → 抽屉5）
+   -------------------------------------------------------------------------- */
+.index-page .home-map{position:fixed;inset:0;z-index:0;width:100%;height:100vh;margin:0;border-radius:0;background:#e6e7eb}
+.index-page .map-error{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:77rpx 38rpx;background:#e6e7eb;color:#767676;text-align:center;font-size:26rpx;line-height:44rpx}
+.index-page .map-error text{display:block;margin-bottom:27rpx}
+.index-page .map-error button{width:300rpx;min-height:88rpx;padding:0 24rpx;
+  border:1px solid #9cc3b0;background:#ffffff;color:#00754a;font-size:26rpx;line-height:36rpx}
+
+/* --------------------------------------------------------------------------
+   02 悬浮控件卡
+   p03 正常态：搜索框 + 我的位置 / 示例地点（+ 次级辅助）
+   p05 真空态：地图失败且无任何可展示地点时才退化为「只有搜索框」
+   -------------------------------------------------------------------------- */
+/* PDF p03：卡片外边距 17pdf(24rpx) / 上距导航栏 17pdf(24rpx) / 圆角 20pdf(28rpx)
+   / 内边距 上16pdf(22rpx) 左右19pdf(25rpx) 下27pdf(37rpx) */
+.index-page .map-controls{position:fixed;top:calc(24rpx + env(safe-area-inset-top));right:24rpx;left:24rpx;z-index:2;
+  padding:22rpx 25rpx 37rpx;border:0;border-radius:28rpx;background:#ffffff;box-shadow:0 12rpx 38rpx rgba(0,117,74,.06)}
+
+/* 搜索入口：唯一主入口，始终可用。高 92rpx（PDF 67pdf→93，取 92 使 92−36=56 为偶数） */
+.index-page .map-search{display:flex;align-items:center;gap:15rpx;min-height:92rpx;padding:0 27rpx;
+  border:1px solid #e5e5e5;border-radius:999rpx;background:#f7f7f7}
+.index-page .map-search-icon{flex:0 0 auto;width:38rpx;height:38rpx;
+  background-repeat:no-repeat;background-position:center;background-size:contain;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M20 20l-4.2-4.2'/%3E%3C/svg%3E")}
+.index-page .map-search-text{min-width:0;overflow:hidden;color:#9a9a9a;font-size:26rpx;line-height:36rpx;text-overflow:ellipsis;white-space:nowrap}
+
+/* p03 辅助按钮：白底 + 绿描边胶囊，等宽两枚。
+   PDF p03 实测：高 56pdf(77rpx)、间距 14pdf(19rpx)、与搜索框间距 14pdf(19rpx)。
+   取 76rpx 而非 77：76−36=40 为偶数，文字落整像素。 */
+.index-page .map-control-row{display:flex;gap:19rpx;margin-top:19rpx}
+.index-page .map-control-row button{flex:1;min-height:76rpx;padding:0 20rpx;
+  border:1px solid #9cc3b0;background:#ffffff;color:#00754a;font-size:24rpx;font-weight:500;line-height:36rpx}
+.index-page .map-control-row button:active{background:#e8f2ec}
+.index-page .map-control-row button[disabled]{border-color:#e5e5e5;background:#f1f2ed;color:#9a9a9a}
+
+/* 次级辅助控件：仅在相关状态出现，视觉层级低于搜索入口与 CTA */
+.index-page .map-aux-row{display:flex;align-items:center;justify-content:space-between;gap:15rpx;
+  margin-top:21rpx;padding:15rpx 8rpx 0;border-top:1px solid #e5e5e5}
+.index-page .map-aux-copy{flex:1;min-width:0;font-size:24rpx;color:#767676;line-height:32rpx}
+.index-page .map-aux-note{display:block;margin-top:4rpx;font-size:22rpx;color:#9a9a9a;line-height:30rpx}
+.index-page .map-aux-row switch{flex:none;transform:scale(.8);transform-origin:right center}
+.index-page .map-location{display:block;margin:12rpx 4rpx 0;color:#767676;font-size:22rpx;line-height:30rpx}
+
+.index-page .map-filter{display:flex;gap:12rpx;margin-top:15rpx}
+.index-page .map-filter .filter-tag{display:flex;align-items:center;margin:0;padding:8rpx 20rpx;
+  border:1px solid #e5e5e5;border-radius:999rpx;background:#ffffff;color:#4a4a4a;font-size:24rpx;line-height:32rpx}
+.index-page .map-filter .filter-tag radio{transform:scale(.7);margin-right:4rpx}
+
+/* 定位失败条 */
+.index-page .map-location-error{position:fixed;right:24rpx;bottom:calc(156rpx + env(safe-area-inset-bottom));left:24rpx;z-index:4;
+  display:flex;flex-wrap:wrap;align-items:center;gap:15rpx;padding:23rpx 27rpx;border-radius:27rpx;background:#fdf0ee;
+  border-left:3px solid #b3261e}
+.index-page .map-location-error text{flex:1 1 100%;color:#b3261e;font-size:24rpx;line-height:36rpx}
+.index-page .map-location-error button{flex:1;min-height:66rpx;padding:0 20rpx;
+  border:1px solid #b3261e;background:#ffffff;color:#b3261e;font-size:24rpx;line-height:32rpx}
+
+/* 地图失败降级列表 */
+.index-page .place-list-overlay{position:fixed;right:24rpx;bottom:calc(112rpx + env(safe-area-inset-bottom));left:24rpx;z-index:3;
+  max-height:48vh;padding:19rpx 23rpx 23rpx;border:0;border-radius:28rpx;background:#ffffff;box-shadow:0 19rpx 54rpx rgba(0,117,74,.12)}
+.index-page .place-list-hint{padding:4rpx 4rpx 15rpx;color:#767676;font-size:24rpx;line-height:32rpx}
+.index-page .place-card{margin:12rpx 0;border:0;border-radius:27rpx;background:#f7f7f7}
+.index-page .place-summary{display:flex;align-items:center;gap:19rpx;padding:23rpx}
+.index-page .place-summary-main{min-width:0;flex:1}
+.index-page .place-address{display:block;overflow:hidden;color:#4a4a4a;font-size:24rpx;line-height:34rpx;text-overflow:ellipsis;white-space:nowrap}
+/* 卡片内「加入菜单 / 已加入」：G2-R4 收窄。定宽 148→120rpx、左右内距 26→12rpx。
+   「加入菜单」4×24=96rpx + 24rpx = 120rpx 正好命中；「已加入」72rpx 被定宽托到同宽，
+   两态同宽不跳动。120rpx 已是该文案的下限（0.81，不是 2/3）——再收就会切字。
+   高 62rpx 不变（Owner 只要求缩宽度；62−32=30 为偶数）。 */
+.index-page .place-card-add{flex:0 0 auto;min-width:120rpx;min-height:62rpx;padding:0 12rpx;
+  background:#e8f2ec;color:#00754a;font-size:24rpx;line-height:32rpx}
+.index-page .place-expanded{padding:0 23rpx 23rpx}
+.index-page .place-facts{display:flex;flex-direction:column;gap:8rpx;margin:19rpx 0;color:#4a4a4a;font-size:24rpx;line-height:34rpx}
+.index-page .place-expanded .row{gap:15rpx}
+.index-page .place-expanded .row button{flex:1;min-height:76rpx;padding:0 20rpx;border:1px solid #9cc3b0;
+  background:#ffffff;color:#00754a;font-size:24rpx;line-height:34rpx}
+/* 已加入态：specificity 需高于上一条 (0,3,1)，否则会被白底绿字盖掉 */
+.index-page .place-expanded .row button.menu-button-added{background:#f7f7f7;color:#767676;border-color:#e5e5e5}
+
+/* --------------------------------------------------------------------------
+   03 底部浮层：提示胶囊（左）+ 菜单 CTA（右）
+   CTA 的 bottom 由模板内联为 px（sheetHeight 让位），此处不覆盖。
+   -------------------------------------------------------------------------- */
+.index-page .map-selection-hint{position:fixed;left:24rpx;bottom:calc(31rpx + env(safe-area-inset-bottom));z-index:2;
+  display:flex;align-items:center;max-width:400rpx;min-height:66rpx;padding:0 27rpx;border-radius:999rpx;
+  background:#ffffff;color:#767676;font-size:22rpx;line-height:30rpx;pointer-events:none}
+/* 菜单悬浮 CTA（PDF 144×61pdf→199×84rpx）。G2-R4：宽度 199→133rpx、左右内距 30→22rpx
+   （Owner 要求宽度约 2/3；高 84rpx 不变）。「菜单 · 3」文字 89rpx + 44rpx = 133rpx 正好命中。
+   max-width 280→187 同步收窄，两位数（菜单 · 12）仍不会被截断。 */
+.index-page .floating{position:fixed;z-index:2;right:24rpx;left:auto;bottom:calc(31rpx + env(safe-area-inset-bottom));
+  min-width:133rpx;max-width:187rpx;min-height:84rpx;padding:0 22rpx;
+  background:#00754a;color:#ffffff;font-size:26rpx;font-weight:600;line-height:36rpx;
+  box-shadow:0 19rpx 54rpx rgba(0,117,74,.12)}
+.index-page .floating:active{background:#005f3b}
+
+/* --------------------------------------------------------------------------
+   04 搜索页 p04（searchMode === true）
+   PDF p04 实测（pdf_px × 1.3838）：页边距 22→30rpx；搜索框高 67→93rpx；
+   搜索按钮 92×68→127×93rpx；框钮间距 11→15rpx；结果卡 497×88→688×122rpx，
+   圆角 26→36rpx，卡间距 17→24rpx；动作胶囊 108×44→148×61rpx。
+   ⚠️ 高 93/61 一律取 92/60：奇数高减行高为奇数 → 行盒落半像素 → 文字发虚。
+
+   ⚠️ G2-R4 Owner 明确指令：「搜索 / 菜单 / 加入菜单 / 已加入菜单」的**宽度**缩到约 2/3，
+   高度不变（Owner 选项「只缩宽度（更短更圆）」）。这是**主动偏离 PDF 宽度**的 Owner 覆盖，
+   不是实测值。缩的是「定宽 + 左右内距」两个横向参数，字号与行高一律不动。
+   实测（headless 渲染回量，× 1.3838）：
+     搜索按钮   127 → 85rpx（0.67）
+     菜单悬浮   199 → 133rpx（0.67）
+     动作胶囊   148 → 104rpx（0.70；再短会低于「＋ 菜单」文字宽度，见下）
+     抽屉加入   180 → 132rpx（0.73；「加入菜单」4 字即 103rpx，已是文字下限）
+   横向内距同时按比例收窄（20→16 / 30→22 / 20→12 / 30→14），否则定宽降下来、内距还在，
+   胶囊只是「文字居中留白更多」，并不会真的变短。
+   ⚠️ 文字宽度 = 字数 × 字号，是本组控件的**硬下限**：「加入菜单」4 字 24rpx = 96rpx，
+   2/3 目标 99rpx 已贴着文字，故只能到 0.70~0.81。要再短就必须同时缩小字号（未做）。
+   -------------------------------------------------------------------------- */
+.index-page .search-page{position:fixed;inset:0;z-index:10;overflow-y:auto;
+  padding:calc(30rpx + env(safe-area-inset-top)) 30rpx calc(46rpx + env(safe-area-inset-bottom));background:#f1f2ed}
+
+.index-page .search-bar{display:flex;align-items:center;gap:15rpx}
+.index-page .search-bar input{min-width:0;width:0;flex:1;margin:0;min-height:92rpx;padding:0 27rpx;
+  border:1px solid #e5e5e5;border-radius:999rpx;background:#f7f7f7;color:#141414;font-size:26rpx;line-height:36rpx}
+.index-page .search-cancel{flex:none;min-width:85rpx;min-height:92rpx;padding:0 16rpx;
+  background:#00754a;color:#ffffff;font-size:26rpx;font-weight:500;line-height:36rpx}
+.index-page .search-cancel:active{background:#005f3b}
+
+.index-page .result-group{margin:34rpx 0 0}
+.index-page .result-heading{display:block;margin:0 4rpx 18rpx;color:#767676;font-size:26rpx;font-weight:600;line-height:36rpx}
+.index-page .result-row{display:flex;align-items:center;gap:20rpx;margin:0 0 24rpx;padding:25rpx;
+  border:1px solid #e5e5e5;border-radius:36rpx;background:#ffffff}
+.index-page .result-main{min-width:0;flex:1}
+.index-page .result-title,.index-page .result-meta{display:block}
+.index-page .result-title{color:#141414;font-size:28rpx;font-weight:600;line-height:38rpx}
+.index-page .result-meta{margin-top:2rpx;overflow:hidden;color:#767676;font-size:22rpx;line-height:30rpx;text-overflow:ellipsis;white-space:nowrap}
+/* 动作胶囊：PDF 里「已加入」与「＋ 菜单」同宽，故用定宽而非由文案撑开。
+   G2-R4：定宽 148→104rpx、左右内距 20→12rpx（Owner 要求宽度约 2/3）。
+   实测「＋ 菜单」文字 79rpx + 24rpx 内距 = 103rpx，故 104rpx 已是该文案的下限；
+   「已加入」72rpx 同样落在 104rpx 内，两态同宽不跳动。
+   「选择城市」文案 96rpx 更长，会撑到 120rpx（0.81）——这是文字下限，不是漏改。
+   高 60rpx（PDF 44pdf→61，取 60 使 60−32=28 为偶数），是四个被点名的按钮里最矮的一档。 */
+.index-page .result-add{flex:0 0 auto;min-width:104rpx;min-height:60rpx;padding:0 12rpx;
+  background:#e8f2ec;color:#00754a;font-size:24rpx;font-weight:500;line-height:32rpx}
+.index-page .result-add:active{background:#dcebe2}
+.index-page .result-add.menu-button-added{background:#f7f7f7;color:#767676;font-weight:400}
+
+/* 搜索态：加载 / 空 / 错误 */
+.index-page .search-state{display:flex;flex-direction:column;align-items:center;gap:15rpx;margin-top:46rpx;
+  padding:77rpx 38rpx;border-radius:36rpx;background:#ffffff;color:#767676;text-align:center}
+.index-page .search-state .subtitle{margin:0;color:#141414;font-size:32rpx;font-weight:600;line-height:44rpx}
+.index-page .search-state .note{margin:0;color:#767676;font-size:24rpx;line-height:38rpx}
+.index-page .search-loading{display:flex;align-items:center;justify-content:center;gap:19rpx;margin-top:46rpx;
+  padding:50rpx;border-radius:36rpx;background:#ffffff;color:#4a4a4a;font-size:26rpx;line-height:36rpx}
+.index-page .spin{width:33rpx;height:33rpx;border-radius:50%;border:2px solid #e5e5e5;border-top-color:#00754a;animation:g2spin .9s linear infinite}
+@keyframes g2spin{to{transform:rotate(360deg)}}
+.index-page .empty-icon{width:119rpx;height:119rpx;border-radius:27rpx;background-color:#f7f7f7;
+  background-repeat:no-repeat;background-position:center;background-size:50rpx;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s6.8-6.1 6.8-10.9a6.8 6.8 0 1 0-13.6 0C5.2 14.9 12 21 12 21z'/%3E%3Ccircle cx='12' cy='10' r='2.4'/%3E%3C/svg%3E")}
+
+/* 错误条（danger）：标题 + 说明 + 右侧描边重试钮 */
+.index-page .err{display:flex;align-items:center;gap:23rpx;margin:23rpx 0;padding:23rpx 27rpx;
+  border-radius:27rpx;background:#fdf0ee;border-left:3px solid #b3261e}
+.index-page .err .err-mid{flex:1;min-width:0}
+.index-page .err .err-title{display:block;color:#b3261e;font-size:24rpx;font-weight:600;line-height:36rpx}
+.index-page .err .err-desc{display:block;margin-top:4rpx;color:#b3261e;opacity:.85;font-size:24rpx;line-height:32rpx}
+.index-page .err button{flex:0 0 auto;min-height:62rpx;padding:0 26rpx;
+  border:1px solid #b3261e;background:#ffffff;color:#b3261e;font-size:24rpx;line-height:32rpx}
+
+/* --------------------------------------------------------------------------
+   05 首页地点抽屉（p03 触发 / 与 place-detail 是两套独立实现，机制不同不要互抄）
+   高度：JS 以 px 内联；内部滚动走 flex:1 + height:0，不依赖硬编码偏移。
+   transition:none —— 拖拽跟手，不做高度动画（动画会每帧重排导致卡顿）。
+   -------------------------------------------------------------------------- */
+.index-page .place-sheet{position:fixed;right:0;bottom:0;left:0;z-index:5;display:flex;flex-direction:column;
+  overflow:hidden;box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom);
+  border-radius:46rpx 46rpx 0 0;background:#ffffff;box-shadow:0 -10rpx 30rpx rgba(0,117,74,.12);transition:none}
+.index-page .sheet-drag-region{flex-shrink:0;padding:23rpx 31rpx 27rpx;background:#ffffff;user-select:none;touch-action:none;
+  border-bottom:1px solid #e5e5e5}
+.index-page .sheet-handle{width:77rpx;height:8rpx;margin:0 auto 27rpx;border-radius:4rpx;background:#e5e5e5}
+.index-page .sheet-title-row{display:flex;align-items:center;justify-content:space-between;gap:23rpx}
+.index-page .sheet-title{flex:1;min-width:0;overflow:hidden;color:#141414;font-size:40rpx;font-weight:700;line-height:54rpx;text-overflow:ellipsis;white-space:nowrap}
+.index-page .sheet-add{flex:none;min-width:132rpx;min-height:84rpx;padding:0 14rpx;
+  background:#00754a;color:#ffffff;font-size:26rpx;font-weight:500;line-height:36rpx}
+.index-page .sheet-add:active{background:#005f3b}
+.index-page .sheet-add[disabled]{background:#f1f2ed;color:#9a9a9a}
+.index-page .sheet-add-added,.index-page .menu-button-added{background:#f7f7f7;color:#767676;border-color:transparent}
+.index-page .sheet-tags{display:flex;flex-wrap:wrap;gap:12rpx;margin-top:15rpx}
+.index-page .sheet-tags .tag{display:inline-flex;align-items:center;margin:0;height:50rpx;padding:0 23rpx;
+  border:0;border-radius:999rpx;background:#e8f2ec;color:#00754a;font-size:24rpx;font-weight:500;line-height:32rpx}
+.index-page .sheet-address{display:block;margin-top:15rpx;overflow:hidden;color:#4a4a4a;font-size:24rpx;line-height:34rpx;text-overflow:ellipsis;white-space:nowrap}
+.index-page .sheet-scroll{flex:1;height:0;min-height:0;width:100%;box-sizing:border-box}
+.index-page .sheet-content{padding:0 31rpx 46rpx}
+
+/* 状态块：加载 / 缺失（中性）/ 失败（危险）—— 三者视觉必须可区分 */
+.index-page .detail-status{margin:23rpx 0;color:#767676;font-size:24rpx;line-height:38rpx}
+.index-page .detail-missing{margin:23rpx 0;padding:23rpx 27rpx;border-radius:27rpx;color:#767676;background:#f7f7f7;font-size:24rpx;line-height:38rpx}
+.index-page .detail-error{margin:23rpx 0}
+
+/* 抽屉内容区块 */
+.index-page .detail-section{padding:27rpx 0;border-bottom:1px solid #e5e5e5}
+.index-page .detail-section:last-child{border-bottom:0}
+.index-page .detail-line{margin:15rpx 0;color:#4a4a4a;font-size:26rpx;line-height:38rpx}
+.index-page .detail-copy{margin:19rpx 0;color:#4a4a4a;font-size:26rpx;line-height:38rpx}
+.index-page .detail-section .note{display:block;margin:12rpx 0;color:#767676;font-size:24rpx;line-height:34rpx}
+.index-page .section-title{margin:0 0 19rpx;color:#141414;font-size:32rpx;font-weight:600;line-height:46rpx}
+.index-page .section-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:23rpx}
+.index-page .section-title-row .section-title{margin-bottom:19rpx}
+.index-page .community-meta{flex:0 0 auto;color:#767676;font-size:24rpx;line-height:32rpx}
+.index-page .community-grid{display:grid;grid-template-columns:1fr 1fr;gap:19rpx}
+.index-page .community-stat{padding:27rpx;border:0;border-radius:27rpx;background:#f7f7f7}
+.index-page .community-label{display:block;color:#767676;font-size:24rpx;line-height:32rpx}
+.index-page .community-value{display:block;margin-top:8rpx;color:#141414;font-size:32rpx;font-weight:600;line-height:46rpx}
+
+/* 候选地点 */
+.index-page .candidate-section{margin-top:23rpx}
+.index-page .candidate-row{display:flex;align-items:center;justify-content:space-between;gap:23rpx;margin-top:15rpx;padding:23rpx;
+  border:1px solid #e5e5e5;border-radius:27rpx;background:#ffffff}
+.index-page .candidate-title{display:block;color:#141414;font-size:28rpx;font-weight:600;line-height:38rpx}
+.index-page .candidate-row .note{display:block;margin:4rpx 0 0;overflow:hidden;color:#767676;font-size:24rpx;line-height:32rpx;text-overflow:ellipsis;white-space:nowrap}
+.index-page .candidate-action{flex:0 0 auto;color:#00754a;font-size:24rpx;font-weight:500;line-height:34rpx}
+
+/* 社区内容卡 */
+.index-page .empty-card,.index-page .reference-card{margin-top:15rpx;padding:38rpx;border:0;border-radius:36rpx;background:#ffffff}
+.index-page .empty-card{color:#767676;text-align:center;font-size:24rpx;line-height:38rpx}
+.index-page .reference-card{padding:31rpx 35rpx}
+.index-page .reference-card .subtitle{margin:0;color:#141414;font-size:30rpx;font-weight:600;line-height:40rpx}
+.index-page .reference-card .note{margin:8rpx 0 0;color:#767676;font-size:24rpx;line-height:32rpx}
+.index-page .reference-copy{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  margin-top:12rpx;color:#4a4a4a;font-size:26rpx;line-height:38rpx}
+.index-page .photos{display:flex;flex-wrap:wrap;gap:15rpx;margin-top:15rpx}
+.index-page .photos image{width:203rpx;height:203rpx;border-radius:27rpx;background:#f7f7f7}

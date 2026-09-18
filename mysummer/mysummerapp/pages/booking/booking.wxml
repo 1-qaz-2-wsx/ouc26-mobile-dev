@@ -1,0 +1,77 @@
+<!-- 补充信息（2026-09-18 Owner 定稿版）
+     产品定义：这是「我的出行信息记录」——用户把自己在第三方已经买到/确认的
+     车票、航班、住宿信息记回小程序，用于行程展示。
+     没有收银台、没有支付按钮、没有第三方跳转，也不显示房价/库存/可订状态。
+     样式见 booking.wxss（bk- 前缀，不 import styles/mvp.wxss）。 -->
+<view class="bk-page">
+  <view class="bk-err" wx:if="{{error}}">{{error}}</view>
+
+  <block wx:if="{{kind}}">
+    <view class="bk-head">
+      <text class="bk-title">补充信息</text>
+      <text class="bk-sub">填写你实际买到的信息，方案与行程页会自动更新；留空表示还没记录，不会按 0 计算。</text>
+    </view>
+
+    <view class="bk-card">
+      <view class="bk-card-hd">
+        <text class="bk-card-t">{{kindText}}</text>
+        <text wx:if="{{existing}}" class="bk-chip">已补充，可修改</text>
+      </view>
+      <view wx:for="{{rows}}" wx:key="key" class="bk-row">
+        <text class="bk-lb">{{item.label}}</text>
+        <picker
+          wx:if="{{item.type === 'date'}}"
+          mode="date"
+          value="{{fields[item.key]}}"
+          data-key="{{item.key}}"
+          bindchange="field"
+        >
+          <view class="bk-inp bk-pick {{fields[item.key] ? '' : 'bk-ph'}}">{{fields[item.key] || item.placeholder}}</view>
+        </picker>
+        <picker
+          wx:elif="{{item.type === 'time'}}"
+          mode="time"
+          value="{{fields[item.key]}}"
+          data-key="{{item.key}}"
+          bindchange="field"
+        >
+          <view class="bk-inp bk-pick {{fields[item.key] ? '' : 'bk-ph'}}">{{fields[item.key] || item.placeholder}}</view>
+        </picker>
+        <input
+          wx:else
+          class="bk-inp"
+          type="{{item.type}}"
+          value="{{fields[item.key]}}"
+          data-key="{{item.key}}"
+          bindinput="field"
+          placeholder="{{item.placeholder}}"
+          placeholder-class="bk-ph"
+          cursor-spacing="24"
+        />
+      </view>
+    </view>
+
+    <view wx:if="{{refRows.length}}" class="bk-card">
+      <view class="bk-card-hd">
+        <text class="bk-card-t">来自方案的原值</text>
+        <text class="bk-card-x">只读，用来对照</text>
+      </view>
+      <view wx:for="{{refRows}}" wx:key="label" class="bk-kv">
+        <text class="bk-kv-l">{{item.label}}</text>
+        <text class="bk-kv-v">{{item.value}}</text>
+      </view>
+    </view>
+
+    <view class="bk-tip">保存后记为「已补充（用户记录）」：只用于行程展示，不代表已核验订单。本小程序不代订、不出票、不收款。</view>
+  </block>
+
+  <view wx:else class="bk-empty">
+    <text class="bk-empty-t">没有可补充的卡片</text>
+    <text class="bk-empty-p">请从方案页或行程页的交通 / 住宿卡片右下角进入。</text>
+  </view>
+</view>
+
+<view class="bk-bar" wx:if="{{kind}}">
+  <button class="bk-btn-sec" wx:if="{{existing}}" bindtap="remove" hover-class="hv-flat">删除</button>
+  <button class="bk-btn {{existing ? '' : 'bk-btn-block'}}" bindtap="save" hover-class="hv-dark">保存</button>
+</view>

@@ -1,22 +1,115 @@
-page { height: 100vh; display: flex; flex-direction: column; }
-.scrollarea { flex: 1; overflow: hidden; }
-.place-hero { padding: 42rpx 32rpx; border-radius: 28rpx; color: #fff; background: linear-gradient(145deg, #456c5a, #233b32); }
-.hero-day, .hero-name, .hero-impression, .record-date, .segment-name, .segment-meta { display: block; }
-.hero-day { color: #e7bb95; font-size: 23rpx; font-weight: 700; }
-.hero-name { margin-top: 10rpx; font-size: 56rpx; font-weight: 800; }
-.hero-impression { margin-top: 18rpx; opacity: .86; font-size: 27rpx; line-height: 1.6; }
-.hero-tags { margin-top: 20rpx; }
-.photo-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300rpx; border-radius: 24rpx 24rpx 0 0; color: #6f756e; background: linear-gradient(150deg, #d7ded6, #c9bda9); }
-.photo-note { margin-top: 10rpx; opacity: .72; font-size: 22rpx; }
-.travel-copy { border-radius: 0 0 24rpx 24rpx; box-shadow: none; line-height: 1.75; }
-.record-date { margin-top: 14rpx; color: #8a8e88; font-size: 22rpx; }
-.cost-row, .cost-total, .score-row { display: flex; justify-content: space-between; padding: 13rpx 0; }
-.unknown { color: #b06a52; }
-.cost-total { margin-top: 10rpx; padding-top: 20rpx; border-top: 1rpx solid #e7e3d8; font-weight: 700; }
-.cost-warning { margin-top: 12rpx; color: #946039; font-size: 22rpx; }
-.score-value { margin-right: 14rpx; color: #3d6655; font-weight: 700; }
-.score-track { color: #c58b4e; letter-spacing: 2rpx; }
-.tip-row { display: flex; gap: 12rpx; padding: 12rpx 0; line-height: 1.6; }
-.tip-dot { color: #bd624c; font-weight: 700; }
-.segment-name { font-weight: 700; }
-.segment-meta { margin-top: 8rpx; color: #787d77; font-size: 22rpx; }
+/* ==========================================================================
+   G2 · 地点详情（pages/place-detail）
+   画布屏：p21 地点详情 / p24 地点详情·补齐失败
+
+   真值：设计稿/app/app.css（令牌）+ 设计稿/旅行规划助手 · UI 统一重设计.pdf（逐屏结构）
+   结构（设计要求，不是工程妥协）：
+     地图铺满背景层 + 可展开底部抽屉 + 抽屉内部 scroll-view 滚动。
+     place-detail.json 的 disableScroll:true 必须保留 —— 页面整体不滚。
+
+   ⚠️ 三条硬约束：
+      1. 按钮一律 display:flex + center；行高写整数 rpx（小数行高 → 半像素基线 → 文字发虚）。
+      2. 抽屉**不做高度过渡动画**：transition:none。
+         高度动画会让 flex 容器 + 内部 scroll-view 每帧重排，实测比直接切换更卡。
+      3. 半屏高度改这里必须同步确认展开态与内容可见范围；
+         抽屉正文走 flex:1 + height:0，不依赖硬编码偏移。
+   ========================================================================== */
+
+page{height:100vh;overflow:hidden;background:#f1f2ed}
+.detail-page{position:relative;width:100%;height:100vh;overflow:hidden;background:#f1f2ed;color:#141414;
+  font-size:26rpx;line-height:36rpx;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+
+/* mvp-only 的基础文本骨架：本页 WXML 仍使用裸 .subtitle / .note。
+   只迁入展示基线，不迁 mvp 的 button/input 元素级默认尺寸。 */
+.detail-page .subtitle{display:block;margin:4rpx 0 12rpx;font-size:31rpx;line-height:43rpx;font-weight:650}
+.detail-page .note{display:block;margin:10rpx 0;color:#767676;font-size:24rpx;line-height:38rpx}
+
+/* 按钮基线：居中靠 flex，不靠 line-height 撑高。
+   ⚠️ min-height:0 必须显式声明：styles/mvp.wxss:12 的 button{min-height:84rpx}(0,0,1)
+   只在本条未声明该属性时生效，会把比 84rpx 矮的自定义按钮（重试 62rpx）撑到 84rpx。
+   ⚠️ 不写 overflow:hidden：button + border-radius + overflow:hidden 会把按钮提升成
+   独立合成层，层内文字被降采样 → 「字体模糊」。 */
+.detail-page button{display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+  min-height:0;margin:0;padding:0;border:0;border-radius:999rpx;background:transparent;
+  white-space:nowrap;font-size:26rpx;font-weight:500;line-height:36rpx}
+/* 原生 button::after 的 10rpx 方框描边会盖在胶囊上 → 看起来「不够圆」。 */
+.detail-page button::after{border:0;display:none}
+
+/* 文字落整像素规则：align-items:center 下行盒顶边 = (高 − 行高)/2，差值为奇数
+   则行盒落在半像素上 → 整块文字偏移半格发虚。故高度、字号一律取偶数。 */
+
+/* ---- 背景层：地图铺满 ---- */
+.detail-map,.map-fallback{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:0}
+.map-fallback{display:flex;align-items:center;justify-content:center;padding:77rpx 38rpx;color:#767676;background:#e6e7eb;font-size:26rpx;line-height:44rpx;text-align:center}
+
+/* ---- 半屏抽屉（高度切换即时生效，不做动画） ---- */
+.detail-sheet{position:absolute;right:0;bottom:0;left:0;z-index:5;display:flex;flex-direction:column;
+  box-sizing:border-box;overflow:hidden;height:52vh;padding-bottom:env(safe-area-inset-bottom);
+  border-radius:46rpx 46rpx 0 0;background:#ffffff;box-shadow:0 -10rpx 30rpx rgba(0,117,74,.12);transition:none}
+.detail-sheet-expanded{height:calc(100vh - 150rpx)}
+
+/* 头部：固定，含主/次 CTA */
+.sheet-gesture{flex-shrink:0;touch-action:pan-y}
+.sheet-toggle{padding:23rpx 31rpx 19rpx;user-select:none}
+.sheet-summary{display:block}
+.sheet-handle{width:77rpx;height:8rpx;margin:0 auto 27rpx;border-radius:4rpx;background:#e5e5e5}
+.sheet-title-row{display:flex;align-items:center;justify-content:space-between;gap:23rpx}
+.sheet-title{min-width:0;overflow:hidden;color:#141414;font-size:42rpx;font-weight:700;line-height:56rpx;text-overflow:ellipsis;white-space:nowrap}
+.sheet-state{flex:0 0 auto;color:#767676;font-size:24rpx;line-height:32rpx}
+.sheet-tags{display:flex;flex-wrap:wrap;gap:12rpx;margin-top:15rpx}
+.sheet-tags .tag{display:inline-flex;align-items:center;margin:0;height:50rpx;padding:0 23rpx;border:0;border-radius:999rpx;
+  background:#e8f2ec;color:#00754a;font-size:24rpx;font-weight:500;line-height:32rpx}
+.sheet-address{display:block;margin-top:15rpx;overflow:hidden;color:#4a4a4a;font-size:24rpx;line-height:34rpx;text-overflow:ellipsis;white-space:nowrap}
+
+.sheet-actions{display:flex;gap:15rpx;padding:0 31rpx 27rpx;border-bottom:1px solid #e5e5e5}
+.sheet-actions button{flex:1;min-height:88rpx;padding:0 24rpx}
+/* 一屏只允许一个实心绿主操作 */
+.sheet-primary{background:#00754a;color:#ffffff}
+.sheet-primary:active{background:#005f3b}
+.sheet-primary[disabled]{background:#f1f2ed;color:#9a9a9a}
+.sheet-secondary{border:1px solid #9cc3b0;background:#ffffff;color:#00754a}
+.sheet-secondary:active{background:#e8f2ec}
+
+/* 抽屉正文：内部滚动 */
+.sheet-scroll{flex:1;height:0;min-height:0;width:100%;box-sizing:border-box}
+.sheet-content{padding:0 31rpx 46rpx}
+
+/* ---- 状态块：加载 / 缺失（中性）/ 失败（危险）三者必须可区分 ---- */
+.detail-status{margin:23rpx 0;color:#767676;font-size:24rpx;line-height:38rpx}
+.detail-missing{margin:23rpx 0;padding:23rpx 27rpx;border-radius:27rpx;color:#767676;background:#f7f7f7;font-size:24rpx;line-height:38rpx}
+
+/* 错误条（danger）：底 --danger-bg / 左边 3px --danger / 右侧描边重试钮 */
+.err{display:flex;align-items:center;gap:23rpx;margin:23rpx 0;padding:23rpx 27rpx;
+  border-radius:27rpx;background:#fdf0ee;border-left:3px solid #b3261e}
+.err .err-mid{flex:1;min-width:0}
+.err .err-title{display:block;color:#b3261e;font-size:24rpx;font-weight:600;line-height:36rpx}
+.err .err-desc{display:block;margin-top:4rpx;color:#b3261e;opacity:.85;font-size:24rpx;line-height:32rpx}
+.err button{flex:0 0 auto;min-height:62rpx;padding:0 26rpx;
+  border:1px solid #b3261e;background:#ffffff;color:#b3261e;font-size:24rpx;line-height:32rpx}
+
+/* ---- 内容区块 ---- */
+.detail-section{padding:27rpx 0;border-bottom:1px solid #e5e5e5}
+.detail-section:last-child{border-bottom:0}
+.detail-line{margin:15rpx 0;color:#4a4a4a;font-size:26rpx;line-height:38rpx}
+.detail-copy{margin:19rpx 0;color:#4a4a4a;font-size:26rpx;line-height:38rpx}
+.detail-section .note{display:block;margin:12rpx 0;color:#767676;font-size:24rpx;line-height:34rpx}
+.section-title{margin:0 0 19rpx;color:#141414;font-size:32rpx;font-weight:600;line-height:46rpx}
+.section-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:23rpx}
+.section-title-row .section-title{margin-bottom:19rpx}
+.community-meta{flex:0 0 auto;color:#767676;font-size:24rpx;line-height:32rpx}
+.community-grid{display:grid;grid-template-columns:1fr 1fr;gap:19rpx}
+.community-stat{padding:27rpx;border:0;border-radius:27rpx;background:#f7f7f7}
+.community-label{display:block;color:#767676;font-size:24rpx;line-height:32rpx}
+.community-value{display:block;margin-top:8rpx;color:#141414;font-size:32rpx;font-weight:600;line-height:46rpx}
+
+/* ---- 社区内容卡 ---- */
+.empty-card,.reference-card{margin-top:15rpx;padding:38rpx;border:0;border-radius:36rpx;background:#ffffff}
+.empty-card{color:#767676;text-align:center;font-size:24rpx;line-height:38rpx}
+.reference-card{padding:31rpx 35rpx}
+.reference-card .subtitle{margin:0;color:#141414;font-size:30rpx;font-weight:600;line-height:40rpx}
+.reference-card .note{margin:8rpx 0 0;color:#767676;font-size:24rpx;line-height:32rpx}
+.reference-copy{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  margin-top:12rpx;color:#4a4a4a;font-size:26rpx;line-height:38rpx}
+.photos{display:flex;flex-wrap:wrap;gap:15rpx;margin-top:15rpx}
+.photos image{width:203rpx;height:203rpx;border-radius:27rpx;background:#f7f7f7}

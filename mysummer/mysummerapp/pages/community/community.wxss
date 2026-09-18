@@ -1,0 +1,529 @@
+/* ==========================================================================
+   G7 · Community UI v1 —— 社区四页共用视觉语言（本页前缀 com-）
+   真值：specs/frontend-refactor/design-system-contract.md §1/§2 + AGENTS.md §7
+         （本批不使用 Figma，也不逐像素复刻旧 Canvas/PDF）
+
+   共享规格（community / member / post-detail / post-edit 四页一致）：
+     画布 #F1F2ED ｜ 卡片 #FFFFFF 圆角 38rpx 无描边无投影 ｜ 内嵌块 #F7F7F7 圆角 27rpx
+     主色 #00754A ｜ 浅绿面 #E8F2EC ｜ 主文字 #141414 ｜ 次文 #4A4A4A
+     元信息 #767676 ｜ 分割线 #E5E5E5 ｜ 头像 73rpx（大 138 / 小 50）
+     作者名 28rpx/600 ｜ 帖子标题 30rpx/600 ｜ 正文 26rpx/42rpx ｜ 地点行 24rpx
+     状态标签 高 50rpx 圆角 999 ｜ 次级动作 高 68rpx 圆角 999（#F7F7F7/#767676）
+     主 CTA 高 92rpx 圆角 999 绿底白字，一屏最多 1 个 ｜ 图片圆角 27rpx
+     卡片间距 24rpx ｜ 分区间距 46rpx ｜ 无渐变、无第三方图标字体、普通卡片无投影
+
+   ⚠️ 本页已完全移除对 legacy 基线 styles/mvp.wxss 的 @import：
+     页面底、按钮/输入框默认值不再由 mvp 提供，必须在本文件内显式复位。
+   ⚠️ 选定态统一用「浅绿面 + 绿字」，实心绿只留给主 CTA（见回传的裁定说明）。
+   ========================================================================== */
+
+page {
+  background: #f1f2ed;
+  color: #141414;
+}
+
+.com-page {
+  min-height: 100vh;
+  padding: 24rpx 30rpx calc(60rpx + env(safe-area-inset-bottom));
+  background: #f1f2ed;
+  color: #141414;
+  font-size: 26rpx;
+  line-height: 38rpx;
+}
+
+/* 按钮复位：不写 overflow:hidden（会把按钮提升成合成层，文字降采样发虚）。
+   ⚠️ min-height 必须显式清零，否则微信内置 button 的默认高度会撑爆小胶囊。 */
+.com-page button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-align: center;
+}
+.com-page button::after { border: 0; display: none; }
+/* busy/禁用态统一用 aria-disabled，不用原生 disabled：
+   微信内置 button[disabled]:not([type]) 特异度 (0,2,1) 会压过页面组件类 (0,2,0)。
+   交互拦截由 JS 的 busy 守卫负责（与 pages/me、pages/itinerary 同一约定）。 */
+.com-page button[aria-disabled="true"] { opacity: .55; }
+.com-page image { display: block; }
+.com-page input { box-sizing: border-box; }
+
+/* --------------------------------------------------------------------------
+   顶部区：内容范围 + 发布、推荐/关注、搜索、类型筛选
+   四行，不 sticky、不吸顶，不与内容流抢空间；发布是本页唯一实心绿主 CTA。
+   发布与 tabs 分行：两者同排时会被读成一个「推荐/发布」分段控件。
+   -------------------------------------------------------------------------- */
+.com-controls {
+  display: block;
+  padding: 0;
+}
+.com-controls__top {
+  display: flex;
+  align-items: center;
+  min-height: 76rpx;
+}
+/* 内容范围说明：云端可见范围 vs 本机演示，避免把本机内容读成已发布 */
+.com-scope {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.com-tabs {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 22rpx;
+}
+.com-page .com-tab {
+  flex: none;
+  white-space: nowrap;
+  margin-right: 44rpx;
+  padding-bottom: 10rpx;
+  border-bottom: 4rpx solid transparent;
+  color: #767676;
+  font-size: 30rpx;
+  line-height: 42rpx;
+}
+.com-page .com-tab--on {
+  border-bottom-color: #00754a;
+  color: #141414;
+  font-weight: 700;
+}
+/* 发布入口 = 本页唯一实心绿主 CTA */
+.com-page .com-publish {
+  flex: none;
+  white-space: nowrap;
+  height: 76rpx;
+  margin-left: 24rpx;
+  padding: 0 30rpx;
+  border-radius: 999rpx;
+  background: #00754a;
+  color: #ffffff;
+  font-size: 26rpx;
+  line-height: 34rpx;
+  font-weight: 600;
+}
+
+.com-search {
+  display: flex;
+  align-items: center;
+  height: 76rpx;
+  margin-top: 22rpx;
+  padding: 0 20rpx 0 24rpx;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+}
+.com-search__icon {
+  width: 30rpx;
+  height: 30rpx;
+  flex: none;
+  margin-right: 14rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 30rpx 30rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='6.4'/%3E%3Cpath d='M15.8 15.8 20 20'/%3E%3C/svg%3E");
+}
+.com-search__input {
+  flex: 1;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0;
+  background: transparent;
+  color: #141414;
+  font-size: 26rpx;
+  line-height: 76rpx;
+}
+.com-page .com-search__go {
+  flex: none;
+  white-space: nowrap;
+  height: 60rpx;
+  margin-left: 12rpx;
+  padding: 0 16rpx;
+  border-radius: 999rpx;
+  color: #00754a;
+  font-size: 26rpx;
+  line-height: 34rpx;
+  font-weight: 600;
+}
+
+.com-types {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 22rpx;
+}
+.com-page .com-chip {
+  flex: none;
+  white-space: nowrap;
+  height: 58rpx;
+  padding: 0 24rpx;
+  border: 1px solid #e5e5e5;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #4a4a4a;
+  font-size: 24rpx;
+  line-height: 32rpx;
+}
+.com-page .com-chip--on {
+  border-color: #e8f2ec;
+  background: #e8f2ec;
+  color: #00754a;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   列表头 / 分页脚
+   -------------------------------------------------------------------------- */
+.com-listhead {
+  display: flex;
+  align-items: baseline;
+  margin: 40rpx 2rpx 0;
+}
+.com-listhead__title {
+  font-size: 30rpx;
+  line-height: 42rpx;
+  font-weight: 700;
+  color: #141414;
+}
+.com-listhead__meta {
+  margin-left: auto;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  color: #767676;
+}
+.com-foot {
+  margin: 28rpx 0 10rpx;
+  text-align: center;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+/* --------------------------------------------------------------------------
+   错误条（真实状态）
+   -------------------------------------------------------------------------- */
+.com-err {
+  display: flex;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 22rpx 24rpx;
+  border-left: 3px solid #b3261e;
+  border-radius: 27rpx;
+  background: #fdf0ee;
+}
+.com-err__copy { flex: 1; min-width: 0; }
+.com-err__title {
+  display: block;
+  color: #b3261e;
+  font-size: 25rpx;
+  line-height: 36rpx;
+  font-weight: 600;
+}
+.com-err__text {
+  display: block;
+  margin-top: 4rpx;
+  color: #b3261e;
+  font-size: 23rpx;
+  line-height: 34rpx;
+  opacity: .85;
+}
+.com-err__hint {
+  display: block;
+  margin-top: 2rpx;
+  color: #b3261e;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  opacity: .7;
+}
+.com-page .com-err__go {
+  flex: none;
+  height: 62rpx;
+  margin-left: 20rpx;
+  padding: 0 24rpx;
+  border: 1px solid #b3261e;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #b3261e;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   空态（真实状态：图标 + 原因 + 可选动作）
+   -------------------------------------------------------------------------- */
+.com-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24rpx;
+  padding: 60rpx 34rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.com-empty__icon {
+  width: 119rpx;
+  height: 119rpx;
+  border-radius: 27rpx;
+  background-color: #f7f7f7;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 50rpx 50rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s6.8-6.1 6.8-10.9a6.8 6.8 0 1 0-13.6 0C5.2 14.9 12 21 12 21z'/%3E%3Ccircle cx='12' cy='10' r='2.4'/%3E%3C/svg%3E");
+}
+.com-empty__title {
+  margin-top: 26rpx;
+  color: #141414;
+  font-size: 33rpx;
+  line-height: 46rpx;
+  font-weight: 700;
+  text-align: center;
+}
+.com-empty__text {
+  margin-top: 12rpx;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 38rpx;
+  text-align: center;
+}
+.com-empty__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 30rpx;
+}
+.com-page .com-btn {
+  flex: none;
+  white-space: nowrap;
+  height: 80rpx;
+  margin: 0 10rpx;
+  padding: 0 30rpx;
+  border-radius: 999rpx;
+  font-size: 26rpx;
+  line-height: 34rpx;
+  font-weight: 600;
+}
+.com-page .com-btn--sec {
+  border: 1px solid #9cc3b0;
+  background: #ffffff;
+  color: #00754a;
+}
+
+/* --------------------------------------------------------------------------
+   帖子卡（内容流主角）
+   -------------------------------------------------------------------------- */
+.com-post {
+  margin-top: 24rpx;
+  padding: 34rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.com-author {
+  display: flex;
+  align-items: center;
+}
+.com-avatar {
+  width: 73rpx;
+  height: 73rpx;
+  flex: none;
+  border-radius: 50%;
+  background: #f7f7f7;
+}
+.com-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8f2ec;
+  color: #00754a;
+  font-size: 28rpx;
+  line-height: 28rpx;
+  font-weight: 500;
+}
+.com-author__copy { flex: 1; min-width: 0; margin-left: 20rpx; }
+.com-author__name {
+  display: block;
+  color: #141414;
+  font-size: 28rpx;
+  line-height: 40rpx;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.com-author__meta {
+  display: block;
+  margin-top: 2rpx;
+  color: #767676;
+  font-size: 23rpx;
+  line-height: 32rpx;
+}
+.com-page .com-author__link {
+  flex: none;
+  white-space: nowrap;
+  height: 68rpx;
+  margin-left: 16rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  color: #4a4a4a;
+  font-size: 23rpx;
+  line-height: 30rpx;
+}
+
+.com-post__title {
+  display: block;
+  margin-top: 24rpx;
+  color: #141414;
+  font-size: 30rpx;
+  line-height: 42rpx;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.com-post__summary {
+  display: -webkit-box;
+  margin-top: 10rpx;
+  overflow: hidden;
+  color: #4a4a4a;
+  font-size: 26rpx;
+  line-height: 42rpx;
+  overflow-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.com-post__facts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 20rpx;
+}
+.com-tag {
+  flex: none;
+  height: 50rpx;
+  padding: 0 20rpx;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  color: #4a4a4a;
+  font-size: 22rpx;
+  line-height: 50rpx;
+}
+.com-place {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: 16rpx;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+.com-place__icon {
+  width: 26rpx;
+  height: 26rpx;
+  flex: none;
+  margin-right: 8rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 26rpx 26rpx;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21.2s6.6-6.2 6.6-10.6a6.6 6.6 0 1 0-13.2 0C5.4 15 12 21.2 12 21.2z'/%3E%3Ccircle cx='12' cy='10.6' r='2.4'/%3E%3C/svg%3E");
+}
+.com-post__cover {
+  width: 100%;
+  height: 254rpx;
+  margin-top: 24rpx;
+  border-radius: 27rpx;
+  background: #e9ebe3;
+}
+
+/* --------------------------------------------------------------------------
+   次级动作：淡底胶囊（点赞 / 收藏 / 评论数），视觉明显低于主 CTA
+   -------------------------------------------------------------------------- */
+.com-actions {
+  display: flex;
+  align-items: center;
+  min-height: 88rpx;
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1px solid #e5e5e5;
+}
+.com-page .com-act {
+  flex: none;
+  white-space: nowrap;
+  height: 68rpx;
+  margin-right: 16rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: #f7f7f7;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 32rpx;
+}
+.com-page .com-act--on {
+  background: #e8f2ec;
+  color: #00754a;
+  font-weight: 600;
+}
+.com-act__icon {
+  width: 28rpx;
+  height: 28rpx;
+  flex: none;
+  margin-right: 10rpx;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 28rpx 28rpx;
+}
+.com-act__icon--like { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20.4 4.9 13.6a4.6 4.6 0 0 1 6.5-6.5l.6.6.6-.6a4.6 4.6 0 0 1 6.5 6.5z'/%3E%3C/svg%3E"); }
+.com-page .com-act--on .com-act__icon--like { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20.4 4.9 13.6a4.6 4.6 0 0 1 6.5-6.5l.6.6.6-.6a4.6 4.6 0 0 1 6.5 6.5z'/%3E%3C/svg%3E"); }
+.com-act__icon--book { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.6 3.8h10.8a1.4 1.4 0 0 1 1.4 1.4v15l-6.8-4.2-6.8 4.2v-15a1.4 1.4 0 0 1 1.4-1.4z'/%3E%3C/svg%3E"); }
+.com-page .com-act--on .com-act__icon--book { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300754A' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6.6 3.8h10.8a1.4 1.4 0 0 1 1.4 1.4v15l-6.8-4.2-6.8 4.2v-15a1.4 1.4 0 0 1 1.4-1.4z'/%3E%3C/svg%3E"); }
+.com-act__icon--cmt { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23767676' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.4 12.4c0 3.9-3.8 7-8.4 7a9.7 9.7 0 0 1-2.7-.4L4.6 21l1.3-3.7a6.8 6.8 0 0 1-2.3-4.9c0-3.9 3.8-7 8.4-7s8.4 3.1 8.4 7z'/%3E%3C/svg%3E"); }
+.com-actions__cmt {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  color: #767676;
+  font-size: 24rpx;
+  line-height: 32rpx;
+}
+
+/* --------------------------------------------------------------------------
+   加载态（loading，不是内容）
+   -------------------------------------------------------------------------- */
+.com-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24rpx;
+  padding: 46rpx 34rpx;
+  border-radius: 38rpx;
+  background: #ffffff;
+}
+.com-loading__text {
+  color: #767676;
+  font-size: 26rpx;
+  line-height: 38rpx;
+}
+.com-spin {
+  width: 34rpx;
+  height: 34rpx;
+  flex: none;
+  margin-right: 16rpx;
+  border: 2px solid #e5e5e5;
+  border-top-color: #00754a;
+  border-radius: 50%;
+  animation: com-spin .9s linear infinite;
+}
+@keyframes com-spin { to { transform: rotate(360deg); } }

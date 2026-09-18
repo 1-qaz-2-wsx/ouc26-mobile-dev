@@ -1,0 +1,102 @@
+/* ==========================================================================
+   全局设计令牌 · 唯一令牌源（G1A）
+   真值来源：specs/frontend-refactor/design-system-contract.md §1
+            （A 级证据：设计稿/app/app.css，已像素实测校验）
+   换算：画布 390px 宽 → 750rpx，系数 ×1.923；1px 细线与原生组件不换算。
+   边界：本文件只放系统级令牌，不放通用组件类（.btn/.card/.chip… 属后续批次）。
+   ========================================================================== */
+
+page {
+  /* ---- 01 品牌与强调 ---- */
+  --brand: #00754a;
+  --brand-press: #005f3b;
+  --brand-tint: #e8f2ec;
+  --brand-deep: #1e3932;
+
+  /* ---- 02 中性面 ---- */
+  --surface: #ffffff;
+  --sunken: #f7f7f7;
+  --canvas: #f1f2ed;
+  --greige: #e9ebe3;
+  --greige-2: #dfe6dc;
+  --map: #e6e7eb;
+
+  /* ---- 03 线与文字 ---- */
+  --stroke: #9cc3b0;
+  --hairline: #e5e5e5;
+  --ink: #141414;
+  --body: #4a4a4a;
+  --muted: #767676;
+  --faint: #9a9a9a;
+
+  /* ---- 04 语义 ---- */
+  --warn: #8a4c13;
+  --warn-bg: #fbf4ec;
+  --danger: #b3261e;
+  --danger-bg: #fdf0ee;
+
+  /* ---- 05 奖励金与辅助 ---- */
+  --gold: #d39e40;
+  --gold-l: #f6e4b9;
+  --cream: #f9f0e3;
+
+  /* ---- 06 圆角阶梯 ---- */
+  --r-tag: 15rpx;    /* 8px  */
+  --r-inner: 27rpx;  /* 14px */
+  --r-card: 38rpx;   /* 20px */
+  --r-panel: 46rpx;  /* 24px */
+  --r-pill: 999rpx;
+
+  /* ---- 07 间距 ---- */
+  --sp-page: 31rpx;  /* 16px */
+  --sp-card: 38rpx;  /* 20px */
+  --sp-gap: 23rpx;   /* 12px */
+  --sp-block: 46rpx; /* 24px */
+
+  /* ---- 08 阴影（克制：普通卡片不加投影） ---- */
+  --sh-card: 0 12rpx 38rpx rgba(0, 117, 74, 0.06);
+  --sh-float: 0 19rpx 54rpx rgba(0, 117, 74, 0.12);
+
+  /* ---- 09 触控与字体 ---- */
+  --tap-min: 88rpx;  /* 最小触控目标，既有基线 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* ==========================================================================
+   字面量类：关键样式不全部依赖 var()（低版本安卓 webview 的兼容兜底）
+   命名一律带 tk 前缀，与现有页面类名零重叠。
+   ========================================================================== */
+
+/* 文字色 */
+.tk-ink { color: #141414; }
+.tk-body { color: #4a4a4a; }
+.tk-muted { color: #767676; }
+.tk-faint { color: #9a9a9a; }
+.tk-brand { color: #00754a; }
+.tk-brand-deep { color: #1e3932; }
+.tk-warn { color: #8a4c13; }
+.tk-danger { color: #b3261e; }
+.tk-gold { color: #d39e40; }
+
+/* 底色 */
+.tkbg-surface { background: #ffffff; }
+.tkbg-sunken { background: #f7f7f7; }
+.tkbg-canvas { background: #f1f2ed; }
+.tkbg-greige { background: #e9ebe3; }
+.tkbg-map { background: #e6e7eb; }
+.tkbg-brand-tint { background: #e8f2ec; }
+.tkbg-warn { background: #fbf4ec; }
+.tkbg-danger { background: #fdf0ee; }
+.tkbg-gold-l { background: #f6e4b9; }
+
+/* 线 */
+.tk-stroke { border: 1px solid #9cc3b0; }
+.tk-hairline { border-bottom: 1px solid #e5e5e5; }
+
+/* 圆角 */
+.tkr-tag { border-radius: 15rpx; }
+.tkr-inner { border-radius: 27rpx; }
+.tkr-card { border-radius: 38rpx; }
+.tkr-panel { border-radius: 46rpx 46rpx 0 0; }
+.tkr-pill { border-radius: 999rpx; }

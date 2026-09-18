@@ -1,15 +1,102 @@
-<navigation-bar title="{{place ? place.name : '地点详情'}}" back="{{true}}" color="#20372f" background="#fffdf7"></navigation-bar>
-<scroll-view class="scrollarea" scroll-y enhanced show-scrollbar="{{false}}">
-  <view class="page-shell">
-    <view wx:if="{{notFound}}" class="empty-card">地点不存在或数据已调整，请返回上一页。</view>
-    <block wx:if="{{place}}">
-      <view class="place-hero"><text class="hero-day">DAY {{place.visitDaysText}}</text><text class="hero-name">{{place.name}}</text><text class="hero-impression">{{place.impression}}</text><view class="hero-tags"><text class="tag" wx:for="{{place.tags}}" wx:key="*this">{{item}}</text></view></view>
-      <view class="section"><view class="section-title">我的旅行</view><view class="photo-placeholder"><text>旅行照片待补</text><text class="photo-note">后续将使用本人实拍照片替换</text></view><view class="card travel-copy">{{place.summary}}<text class="record-date">旅行日期：待补</text></view></view>
-      <view class="section"><view class="section-title">我的实际花费</view><view wx:if="{{hasKnownCost}}" class="card"><view class="cost-row" wx:for="{{costRows}}" wx:key="key"><text>{{item.label}}</text><text class="{{item.known ? 'known' : 'unknown'}}">{{item.text}}</text></view><view class="cost-total"><text>已记录合计</text><text>¥{{knownTotal}}</text></view><view wx:if="{{hasUnknownCost}}" class="cost-warning">仍有待补项目，当前合计不是完整总花费。</view></view><view wx:else class="empty-card">本次费用尚未整理，真实票据补齐前不显示虚假的 ¥0。</view></view>
-      <view class="section"><view class="section-title">穷游评价</view><view wx:if="{{scoreRows.length}}" class="card"><view class="score-row" wx:for="{{scoreRows}}" wx:key="key"><text>{{item.label}}</text><view><text class="score-value">{{item.value}} / 5</text><text class="score-track">★★★★★</text></view></view></view><view wx:else class="empty-card">该地点的评分尚未整理。</view></view>
-      <view class="section"><view class="section-title">如果你也想来</view><view class="card"><view class="tip-row" wx:for="{{place.tips}}" wx:key="*this"><text class="tip-dot">•</text><text>{{item}}</text></view></view></view>
-      <view class="section"><view class="section-title">旅程中的相邻路段</view><view class="card"><view class="link-row" wx:for="{{relatedSegments}}" wx:key="id" data-id="{{item.id}}" bindtap="openSegment"><view><text class="segment-name">{{item.fromPlace.name}} → {{item.toPlace.name}}</text><text class="segment-meta">{{item.transportType}} · {{item.durationText}} · {{item.costText}}</text></view><text>›</text></view></view></view>
-      <view class="status-note">历史旅行经历不等于当前交通信息。班次、票价和开放状态请在出发前向官方渠道复核。</view>
-    </block>
+<view class="detail-page">
+ <!-- 背景层：地图铺满（p21 / p24 均为「地图 + 半屏抽屉」结构） -->
+ <map wx:if="{{place && hasCoordinates}}" class="detail-map" latitude="{{latitude}}" longitude="{{longitude}}" scale="15" markers="{{markers}}" enable-poi="{{true}}" bindpoitap="poi" bindmarkertap="marker" bindcallouttap="marker"/>
+ <view wx:else class="map-fallback"><text>{{error || '该地点暂无可用坐标'}}</text></view>
+
+ <!-- 半屏抽屉：头部固定（含主/次 CTA），正文在抽屉内部 scroll-view 滚动。
+      页面整体不滚（place-detail.json disableScroll:true），地图始终在背景层。 -->
+ <view wx:if="{{place}}" class="detail-sheet {{sheetExpanded?'detail-sheet-expanded':''}}">
+  <view class="sheet-gesture" bindtouchstart="sheetTouchStart" bindtouchend="sheetTouchEnd" bindtouchcancel="sheetTouchCancel">
+   <view class="sheet-toggle" bindtap="toggleSheet" aria-role="button" aria-label="{{sheetExpanded?'收起地点详情':'展开地点详情'}}">
+    <view class="sheet-handle"></view>
+    <view class="sheet-summary">
+     <view class="sheet-title-row">
+      <text class="sheet-title">{{place.name}}</text>
+      <text class="sheet-state">{{sheetExpanded?'下滑收起':'上滑展开'}}</text>
+     </view>
+     <view class="sheet-tags">
+      <text class="tag">{{place.category || '地点'}}</text>
+      <text wx:if="{{place.city}}" class="tag">{{place.city}}</text>
+     </view>
+     <text wx:if="{{displayAddress}}" class="sheet-address">{{displayAddress}}</text>
+     <text wx:elif="{{detailLoading}}" class="sheet-address">正在获取地点详情…</text>
+     <text wx:elif="{{detailMissing}}" class="sheet-address">补充资料暂缺，当前仅展示地图基础信息</text>
+     <text wx:elif="{{detailError}}" class="sheet-address">详情暂未补全，可展开后重试</text>
+    </view>
+   </view>
+   <view class="sheet-actions">
+    <button class="sheet-primary" bindtap="add" disabled="{{added || detailLoading || place.canAdd === false}}">{{added?'已加入菜单':detailLoading?'正在确认地点':place.canAdd === false?'待确认':'加入地点菜单'}}</button>
+    <button class="sheet-secondary" bindtap="menu">查看菜单</button>
+   </view>
   </view>
-</scroll-view>
+
+  <!-- 抽屉内部滚动：未展开态同样渲染（p21 的可见范围要求），展开态只是变高 -->
+  <scroll-view class="sheet-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+   <view class="sheet-content">
+    <view wx:if="{{detailLoading}}" class="detail-status">正在从腾讯地图补全地点信息…</view>
+
+    <!-- 失败（danger）与缺失（中性）视觉必须分离，不可做成同一个错误态 -->
+    <view wx:if="{{detailError && !detailMissing}}" class="err">
+     <view class="err-mid"><text class="err-title">地点详情补全失败</text><text class="err-desc">{{detailError}}</text></view>
+     <button bindtap="retryDetail">重试</button>
+    </view>
+    <view wx:if="{{detailMissing}}" class="detail-missing">补充资料暂缺，当前仅展示地图名称与位置；基础信息仍可加入菜单。</view>
+
+    <view class="detail-section">
+     <view class="section-title">地点信息</view>
+     <view class="detail-line" wx:if="{{place.telephone}}">电话：{{place.telephone}}</view>
+     <view class="detail-line" wx:if="{{hasCoordinates}}">位置：{{place.latitude}}, {{place.longitude}}</view>
+     <text class="note">腾讯地图信息 · {{place.source}}<text wx:if="{{place.providerId}}"> · POI {{place.providerId}}</text></text>
+     <view wx:if="{{place.summary}}" class="detail-copy">{{place.summary}}</view>
+     <view wx:if="{{place.tips}}" class="detail-copy">提示：{{place.tips}}</view>
+    </view>
+
+    <view class="detail-section">
+     <view class="section-title-row">
+      <view class="section-title">社区内容</view>
+      <text class="community-meta">{{communityLoading?'正在加载…':posts.length+' 条关联内容'}}</text>
+     </view>
+     <view wx:if="{{communityError}}" class="err">
+      <view class="err-mid"><text class="err-title">社区内容加载失败</text><text class="err-desc">{{communityError}}</text></view>
+      <button bindtap="retryCommunity">重试</button>
+     </view>
+     <view class="community-grid">
+      <view class="community-stat"><text class="community-label">社区推荐度</text><text class="community-value">{{ratingText || '暂无评分'}}</text></view>
+      <view class="community-stat"><text class="community-label">建议游玩时间</text><text class="community-value">{{durationText || '暂无记录'}}</text></view>
+     </view>
+    </view>
+
+    <view class="detail-section">
+     <view class="subtitle">社区评价</view>
+     <view wx:if="{{!reviews.length}}" class="empty-card">暂无社区成员评价。</view>
+     <view wx:for="{{reviews}}" wx:key="id" class="reference-card" data-id="{{item.id}}" bindtap="post">
+      <view class="subtitle">{{item.title}}</view>
+      <view wx:if="{{item.rating}}" class="note">推荐 {{item.rating}} / 5<text wx:if="{{item.duration}}"> · 建议 {{item.duration}}</text></view>
+      <view class="reference-copy">{{item.content}}</view>
+     </view>
+    </view>
+
+    <view class="detail-section">
+     <view class="subtitle">社区照片</view>
+     <view wx:if="{{!photos.length}}" class="empty-card">暂无社区成员上传的照片。</view>
+     <view wx:else class="photos"><image wx:for="{{photos}}" wx:key="*this" src="{{item}}" mode="aspectFill" data-src="{{item}}" bindtap="preview"/></view>
+    </view>
+
+    <view class="detail-section">
+     <view class="subtitle">社区旅行路线</view>
+     <view wx:if="{{!routes.length}}" class="empty-card">暂无包含该地点的公开旅行路线。</view>
+     <view wx:for="{{routes}}" wx:key="id" class="reference-card" data-id="{{item.id}}" bindtap="post">
+      <view class="subtitle">{{item.title}}</view>
+      <view class="note">{{item.authorName}} · 点击查看路线</view>
+     </view>
+    </view>
+
+    <view class="detail-section">
+     <view class="subtitle">其他社区参考</view>
+     <view wx:if="{{!otherPosts.length}}" class="empty-card">暂无其他关联内容。</view>
+     <view wx:for="{{otherPosts}}" wx:key="id" class="reference-card" data-id="{{item.id}}" bindtap="post">{{item.title}}</view>
+    </view>
+   </view>
+  </scroll-view>
+ </view>
+</view>
